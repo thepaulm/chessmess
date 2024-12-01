@@ -205,27 +205,6 @@ function search_incr(color, type, rowdir, filedir, trow, tfile) {
     }
 }
 
-function find_bishop_src(color, trow, tfile, filerestrict) {
-    var ret = null;
-    ret = search_incr(color, 'b', 1, 1, trow, tfile);
-    if (ret != null) {
-        return ret;
-    }
-    ret = search_incr(color, 'b', -1, 1, trow, tfile);
-    if (ret != null) {
-        return ret;
-    }
-    ret = search_incr(color, 'b', 1, -1, trow, tfile);
-    if (ret != null) {
-        return ret;
-    }
-    ret = search_incr(color, 'b', -1, -1, trow, tfile);
-    if (ret != null) {
-        return ret;
-    }
-    return null;
-}
-
 function find_knight_src(color, trow, tfile, filerestrict) {
     var srow = trow;
     var sfile = tfile;
@@ -317,11 +296,73 @@ function find_knight_src(color, trow, tfile, filerestrict) {
     return null;
 }
 
+function find_bishop_pattern(type, color, trow, tfile, filerestrict) {
+    var ret = null;
+    ret = search_incr(color, type, 1, 1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, type, -1, 1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, type, 1, -1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, type, -1, -1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    return null;
+}
+
+function find_rook_pattern(type, color, trow, tfile, filerestrict) {
+    var ret = null;
+    ret = search_incr(color, type, 0, 1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, type, 0, -1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, type, 1, 0, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, type, -1, 0, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    return null;
+}
+
+function find_bishop_src(color, trow, tfile, filerestrict) {
+    return find_bishop_pattern('b', color, trow, tfile, filerestrict);
+}
+
+function find_rook_src(color, trow, tfile, filerestrict) {
+    return find_rook_pattern('r', color, trow, tfile, filerestrict);
+}
+
+function find_queen_src(color, trow, tfile, filerestrict) {
+    var piece = find_bishop_pattern('q', color, trow, tfile, filerestrict);
+    if (piece == null) {
+        piece = find_rook_pattern('q', color, trow, tfile, filerestrict);
+    }
+    return piece;
+}
+
 function find_src_type(color, type, trow, tfile, filerestrict) {
     if (type == 'b') {
         return find_bishop_src(color, trow, tfile, filerestrict);
     } else if (type == 'n') {
         return find_knight_src(color, trow, tfile, filerestrict);
+    } else if (type == 'q') {
+        return find_queen_src(color, trow, tfile, filerestrict);
+    } else if (type == 'r') {
+        return find_rook_src(color, trow, tfile, filerestrict);
     }
     return null;
 }
