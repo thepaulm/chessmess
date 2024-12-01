@@ -18,6 +18,13 @@ function islower(a) {
     return ascii(a) >= ascii('a') && ascii(a) <= ascii('z');
 }
 
+function upper(a) {
+    if (ascii(a) >= ascii('a') && ascii(a) <= ascii('z')) {
+        return String.fromCharCode(ascii('A') + (ascii(a) - ascii('a')));
+    }
+    return a;
+}
+
 function lower(a) {
     if (ascii(a) >= ascii('A') && ascii(a) <= ascii('Z')) {
         return String.fromCharCode(ascii('a') + (ascii(a) - ascii('A')));
