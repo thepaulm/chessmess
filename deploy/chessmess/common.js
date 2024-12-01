@@ -13,3 +13,14 @@ function tonum(c) {
 function isspace(c) {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
+
+function islower(a) {
+    return ascii(a) >= ascii('a') && ascii(a) <= ascii('z');
+}
+
+function lower(a) {
+    if (ascii(a) >= ascii('A') && ascii(a) <= ascii('Z')) {
+        return String.fromCharCode(ascii('a') + (ascii(a) - ascii('A')));
+    }
+    return a;
+}

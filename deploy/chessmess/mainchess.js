@@ -1,3 +1,27 @@
+let squares = 8;
+let board = null;
+
+/* reset on reload pgn */
+let moves = null;
+let boardspace = null;
+let boardspace_at = null;
+
+function img_row(cpos) {
+    return 8 - Number(cpos[1]);
+}
+
+function img_file(cpos) {
+    return ascii(cpos[0]) - ascii('a');
+}
+
+function brow(cpos) {
+    return Number(cpos[1]);
+}
+
+function bfile(cpos) {
+    return ascii(cpos[0]) - ascii('a');
+}
+
 function set_piece_location(piece, x, y) {
     piece.style.left = `${x}px`;
     piece.style.top = `${y}px`;
@@ -34,13 +58,27 @@ function center_piece(board, piece) {
 }
 
 function set_piece(board, piece, cpos) {
-    row = 8 - Number(cpos[1]);
-    file = ascii(cpos[0]) - ascii('a');
+    var prow = img_row(cpos);
+    var pfile = img_file(cpos);
 
-    piece_to_square(board, piece, file, row);
+    piece_to_square(board, piece, pfile, prow);
 }
 
-function load_piece(filename, position) {
+class Piece {
+    constructor(name, image, position) {
+        this.name = name;
+        this.type = lower(name);
+        this.image = image;
+        this.position = position;
+        if (islower(name[0])) {
+            this.color = "black";
+        } else {
+            this.color = "white";
+        }
+    }
+}
+
+function load_piece(name, filename, position) {
     var p = new Image();
     p.src = filename;
     p.isdragging = false;
@@ -49,6 +87,11 @@ function load_piece(filename, position) {
         p.style.position = 'absolute';
         set_piece(board, p, position);
     };
+
+    var piece = new Piece(name, p, position);
+    var prow = brow(position);
+    var pfile = bfile(position);
+    boardspace[prow][pfile] = piece;
 
     p.addEventListener('mousedown', (e) => {
         e.stopPropagation();
@@ -75,15 +118,254 @@ function load_piece(filename, position) {
     });
 }
 
-function make_pgn_handler(board, pgn_paste) {
-    return async function (event) {
-        var moves = parse_move_tree(pgn_paste.value);
+function print_moves() {
+    var at = moves.top;
+
+    for (;;) {
+        if (at.moves.length == 0) {
+            return;
+        }
+        var move = at.moves[0];
+        console.log(move.move_number + " " + move.color + ": " + move.move);
+        at = move.next;
     }
 }
 
+function make_pgn_handler(board, pgn_paste) {
+    return async function (event) {
+        reload_board();
+        moves = parse_move_tree(pgn_paste.value);
+        print_moves();
+    }
+}
+
+function is_loc(m) {
+    return ascii(m) >= ascii('a') && ascii(m) <= ascii('h');
+}
+
+function is_piece(m) {
+    m = lower(m);
+    return m == 'p' || m == 'r' || m == 'n' || m == 'b' || m == 'q' || m == 'k';
+}
+
+function find_src(color, trow, tfile) {
+    /* first check pawn one off */
+    var p = boardspace[trow+1][tfile];
+    if (p != null && p.color == color) {
+        return p;
+    }
+    p = boardspace[trow-1][tfile];
+    if (p != null && p.color == color) {
+        return p;
+    }
+
+    /* check for first move double */
+    if (trow == 4) {
+        p = boardspace[trow-2][tfile];
+        if (p != null) {
+            return p;
+        }
+    }
+    if (trow == 5) {
+        p = boardspace[trow + 2][tfile];
+        if (p != null) {
+            return p;
+        }
+    }
+    console.log("can't find src piece");
+    return null;
+}
+
+function search_incr(color, type, rowdir, filedir, trow, tfile) {
+    var srow = trow;
+    var sfile = tfile;
+
+    for (;;) {
+        srow += rowdir;
+        sfile += filedir;
+        console.log("searching: " + srow + ", " + sfile);
+        if (srow < 1 || sfile < 0 || srow > 8 || sfile > 7) {
+            return null;
+        }
+
+        var piece = boardspace[srow][sfile];
+        if (piece == null) {
+            continue;
+        }
+        if (piece.color != color) {
+            console.log("found piece of wrong color: " + piece.color + " vs " + color);
+            return null;
+        }
+        if (piece.type != type) {
+            console.log("found piece of wrong type: " + piece.type + " vs " + type);
+            return null;
+        }
+        return piece;
+    }
+}
+
+function find_bishop_src(color, trow, tfile) {
+    var ret = null;
+    ret = search_incr(color, 'b', 1, 1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, 'b', -1, 1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, 'b', 1, -1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    ret = search_incr(color, 'b', -1, -1, trow, tfile);
+    if (ret != null) {
+        return ret;
+    }
+    return null;
+}
+
+function find_src_type(color, type, trow, tfile) {
+    if (type == 'b') {
+        return find_bishop_src(color, trow, tfile);
+    }
+    return null;
+}
+
+function move_piece(piece, position) {
+    var prow = brow(piece.position);
+    var pfile = bfile(piece.position);
+    boardspace[prow][pfile] = null;
+
+    prow = brow(position);
+    pfile = bfile(position);
+    boardspace[prow][pfile] = piece;
+
+    prow = img_row(position);
+    pfile = img_file(position);
+    piece_to_square(board, piece.image, pfile, prow);
+    piece.position = position;
+}
+
+function run_move(move) {
+    console.log("run: " + move.move);
+
+    var piece = null;
+    var movestr = null;
+
+    if (is_loc(move.move[0])) {
+        movestr = move.move;
+        var trow = brow(movestr);
+        var tfile = bfile(movestr);
+        piece = find_src(move.color, trow, tfile);
+    } else if (is_piece(move.move[0])) {
+        movestr = move.move.substr(1);
+        var trow = brow(movestr);
+        var tfile = bfile(movestr);
+        piece = find_src_type(move.color, lower(move.move[0]), trow, tfile);
+    }
+
+    console.log(piece);
+    if (piece != null) {
+        move_piece(piece, movestr);
+    }
+
+}
+
+function make_move() {
+    if (moves == null) {
+        console.log("Load pgn first");
+        return;
+    }
+    if (boardspace_at == null) {
+        boardspace_at = moves.top;
+    }
+    if (boardspace_at.moves.length == 0) {
+        console.log("end of the game buddy");
+        return;
+    }
+    var move = boardspace_at.moves[0]; // could be a choice here
+    run_move(move);
+    boardspace_at = move.next;
+}
+
+function key_press(k) {
+    if (k.key == "ArrowRight") {
+        console.log("next move");
+        make_move();
+    } else if (k.key == "ArrowLeft") {
+        console.log("last move");
+    }
+}
+
+function make_boardspace() {
+    boardspace = new Array(squares);
+    /* adding 1 to the rows so we can index 1-8 like the moves are called */
+    for (let i = 0; i < squares + 1; i++) {
+        boardspace[i] = new Array(squares);
+        for (let j = 0; j < squares; j++) {
+            boardspace[i][j] = null;
+        }
+    }
+}
+
+function clean_old_boardspace() {
+    if (boardspace != null) {
+        for (let i = 0; i < squares + 1; i++) {
+            for (let j = 0; j < squares; j++) {
+                if (boardspace[i][j] != null) {
+                    var p = boardspace[i][j];
+                    p.image.parentElement.removeChild(p.image);
+                }
+            }
+        }
+    }
+}
+
+function reload_board() {
+    clean_old_boardspace();
+    make_boardspace();
+    boardspace_at = null;
+
+    load_piece('p', 'p.png', 'a7');
+    load_piece('p', 'p.png', 'b7');
+    load_piece('p', 'p.png', 'c7');
+    load_piece('p', 'p.png', 'd7');
+    load_piece('p', 'p.png', 'e7');
+    load_piece('p', 'p.png', 'f7');
+    load_piece('p', 'p.png', 'g7');
+    load_piece('p', 'p.png', 'h7');
+
+    load_piece('r', 'r.png', 'a8');
+    load_piece('n', 'n.png', 'b8');
+    load_piece('b', 'b.png', 'c8');
+    load_piece('q', 'q.png', 'd8');
+    load_piece('k', 'k.png', 'e8');
+    load_piece('b', 'b.png', 'f8');
+    load_piece('n', 'n.png', 'g8');
+    load_piece('r', 'r.png', 'h8');
+
+    load_piece('P', 'P.png', 'a2');
+    load_piece('P', 'P.png', 'b2');
+    load_piece('P', 'P.png', 'c2');
+    load_piece('P', 'P.png', 'd2');
+    load_piece('P', 'P.png', 'e2');
+    load_piece('P', 'P.png', 'f2');
+    load_piece('P', 'P.png', 'g2');
+    load_piece('P', 'P.png', 'h2');
+
+    load_piece('R', 'R.png', 'a1');
+    load_piece('N', 'N.png', 'b1');
+    load_piece('B', 'B.png', 'c1');
+    load_piece('Q', 'Q.png', 'd1');
+    load_piece('K', 'K.png', 'e1');
+    load_piece('B', 'B.png', 'f1');
+    load_piece('N', 'N.png', 'g1');
+    load_piece('R', 'R.png', 'h1');
+}
+
 (function () {
-    var squares = 8;
-    var board = document.getElementById('board')
+    board = document.getElementById('board')
     board.addEventListener('dragstart', (e) => {
         e.preventDefault();
     });
@@ -94,40 +376,9 @@ function make_pgn_handler(board, pgn_paste) {
     var pgn_run = document.getElementById('pgn_run');
     pgn_run.addEventListener('click', make_pgn_handler(board, pgn_paste));
 
-    load_piece('p.png', 'a7');
-    load_piece('p.png', 'b7');
-    load_piece('p.png', 'c7');
-    load_piece('p.png', 'd7');
-    load_piece('p.png', 'e7');
-    load_piece('p.png', 'f7');
-    load_piece('p.png', 'g7');
-    load_piece('p.png', 'h7');
+    document.onkeydown = key_press;
 
-    load_piece('r.png', 'a8');
-    load_piece('n.png', 'b8');
-    load_piece('b.png', 'c8');
-    load_piece('q.png', 'd8');
-    load_piece('k.png', 'e8');
-    load_piece('b.png', 'f8');
-    load_piece('n.png', 'g8');
-    load_piece('r.png', 'h8');
+    reload_board();
 
-    load_piece('P.png', 'a2');
-    load_piece('P.png', 'b2');
-    load_piece('P.png', 'c2');
-    load_piece('P.png', 'd2');
-    load_piece('P.png', 'e2');
-    load_piece('P.png', 'f2');
-    load_piece('P.png', 'g2');
-    load_piece('P.png', 'h2');
-
-    load_piece('R.png', 'a1');
-    load_piece('N.png', 'b1');
-    load_piece('B.png', 'c1');
-    load_piece('Q.png', 'd1');
-    load_piece('K.png', 'e1');
-    load_piece('B.png', 'f1');
-    load_piece('N.png', 'g1');
-    load_piece('R.png', 'h1');
 })();
 

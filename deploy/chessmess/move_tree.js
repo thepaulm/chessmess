@@ -8,16 +8,29 @@ MoveTree
  */
 
 class Move {
-    constructor(color, move) {
+    constructor(color, move_number, move) {
         this.color = color;
+        this.move_number = move_number;
         this.move = move;
-        this.next = null;
+        var nextcolor;
+        if (color == "white") {
+            nextcolor = "black";
+        } else {
+            nextcolor = "white";
+        }
+        this.next = new MoveOptionNode(nextcolor);
     }
 }
 class MoveOptionNode {
     constructor(color) {
         this.color = color;
         this.moves = new Array();
+    }
+
+    add_move(move_number, move) {
+        var nextm = new Move(this.color, move_number, move);
+        this.moves.push(nextm);
+        return nextm.next;
     }
 }
 
@@ -81,9 +94,11 @@ function parse_move_tree(text) {
             while (isspace(text[i])) {
                 i++;
             }
+            /*
             if (!inmove) {
                 console.log("Move no: " + moveno);
             }
+            */
             inmove = true;
             continue;
         }
@@ -104,13 +119,14 @@ function parse_move_tree(text) {
         }
 
         if (whomove == 0) {
-            console.log("White move: " + move);
+            // console.log("White move: " + move);
             whomove = 1;
         } else {
-            console.log("Black move: " + move);
+            // console.log("Black move: " + move);
             whomove = 0;
             inmove = false;
         }
+        at = at.add_move(moveno, move);
 
         /* Stop parsing at checkmate */
         if (move.length > 0 && move[move.length-1] == '#') {
