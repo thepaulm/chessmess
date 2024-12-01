@@ -183,7 +183,6 @@ function search_incr(color, type, rowdir, filedir, trow, tfile) {
     for (;;) {
         srow += rowdir;
         sfile += filedir;
-        console.log("searching: " + srow + ", " + sfile);
         if (srow < 1 || sfile < 0 || srow > 8 || sfile > 7) {
             return null;
         }
@@ -193,11 +192,9 @@ function search_incr(color, type, rowdir, filedir, trow, tfile) {
             continue;
         }
         if (piece.color != color) {
-            console.log("found piece of wrong color: " + piece.color + " vs " + color);
             return null;
         }
         if (piece.type != type) {
-            console.log("found piece of wrong type: " + piece.type + " vs " + type);
             return null;
         }
         return piece;
@@ -225,9 +222,86 @@ function find_bishop_src(color, trow, tfile) {
     return null;
 }
 
+function find_knight_src(color, trow, tfile) {
+    var srow = trow;
+    var sfile = tfile;
+
+    srow = trow + 2;
+    if (srow <= 8) {
+        sfile = tfile + 1;
+        if (sfile < 8) {
+            var piece = boardspace[srow][sfile];
+            if (piece != null && piece.color == color && piece.type == 'n') {
+                return piece;
+            }
+        }
+        sfile = tfile - 1;
+        if (sfile >= 0) {
+            var piece = boardspace[srow][sfile];
+            if (piece != null && piece.color == color && piece.type == 'n') {
+                return piece;
+            }
+        }
+    }
+    srow = trow - 2;
+    if (srow > 0) {
+        sfile = tfile + 1;
+        if (sfile < 8) {
+            var piece = boardspace[srow][sfile];
+            if (piece != null && piece.color == color && piece.type == 'n') {
+                return piece;
+            }
+        }
+        sfile = tfile - 1;
+        if (sfile >= 0) {
+            var piece = boardspace[srow][sfile];
+            if (piece != null && piece.color == color && piece.type == 'n') {
+                return piece;
+            }
+        }
+    }
+    srow = trow + 1;
+    if (srow <= 8) {
+        sfile = tfile + 2;
+        if (sfile < 8) {
+            var piece = boardspace[srow][sfile];
+            if (piece != null && piece.color == color && piece.type == 'n') {
+                return piece;
+            }
+        }
+        sfile = tfile - 2;
+        if (sfile >= 0) {
+            var piece = boardspace[srow][sfile];
+            if (piece != null && piece.color == color && piece.type == 'n') {
+                return piece;
+            }
+        }
+    }
+    srow = trow - 1;
+    if (srow > 0) {
+        sfile = tfile + 2;
+        if (sfile < 8) {
+            var piece = boardspace[srow][sfile];
+            if (piece != null && piece.color == color && piece.type == 'n') {
+                return piece;
+            }
+        }
+        sfile = tfile - 2;
+        if (sfile >= 0) {
+            var piece = boardspace[srow][sfile];
+            if (piece != null && piece.color == color && piece.type == 'n') {
+                return piece;
+            }
+        }
+    }
+    return null;
+}
+
 function find_src_type(color, type, trow, tfile) {
     if (type == 'b') {
         return find_bishop_src(color, trow, tfile);
+    } else if (type == 'n') {
+        return find_knight_src(color, trow, tfile);
     }
     return null;
 }
