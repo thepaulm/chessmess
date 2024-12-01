@@ -1,12 +1,29 @@
-class MoveNode {
-    constructor () {
+/*
+
+MoveTree
+  [w              w              w               w]
+ [b b b]        [b b]           [b]            [b b b]
+ [w w] [w] [w]  [w] [w]       [w w w w w]    [w] [w] [w w w ]
+
+ */
+
+class Move {
+    constructor(color, move) {
+        this.color = color;
+        this.move = move;
+        this.next = null;
+    }
+}
+class MoveOptionNode {
+    constructor(color) {
+        this.color = color;
         this.moves = new Array();
     }
 }
 
 class MoveTree {
     constructor() {
-        this.top = new MoveNode();
+        this.top = new MoveOptionNode("white");
     }
 }
 
