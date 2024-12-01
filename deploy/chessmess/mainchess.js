@@ -379,6 +379,10 @@ function find_queen_src(color, trow, tfile, filerestrict) {
     return piece;
 }
 
+function find_king_src(color, trow, tfile) {
+    return null;
+}
+
 function find_src_type(color, type, trow, tfile, filerestrict) {
     if (type == 'B') {
         return find_bishop_src(color, trow, tfile, filerestrict);
@@ -388,6 +392,8 @@ function find_src_type(color, type, trow, tfile, filerestrict) {
         return find_queen_src(color, trow, tfile, filerestrict);
     } else if (type == 'R') {
         return find_rook_src(color, trow, tfile, filerestrict);
+    } else if (type == "K") {
+        return find_king_src(color, trow, tfile);
     }
     return null;
 }
@@ -420,6 +426,19 @@ function move_piece(piece, position, take) {
     }
 }
 
+function find_attack_pawn(move) {
+    var trow;
+    var tfile = bfile(move.move);
+    var movestr = move.move.substr(2);
+    if (move.color == 'white') {
+        trow = brow(movestr) - 1;
+    } else {
+        trow = brow(movestr) + 1;
+    }
+    piece = boardspace[trow][tfile];
+    return piece;
+}
+
 function run_move(move) {
     console.log("run: " + move.move);
     var piece = null;
@@ -430,14 +449,7 @@ function run_move(move) {
         if (is_takes(move.move[1])) {
             movestr = move.move.substr(2);
             take = true;
-            var trow;
-            var tfile = bfile(move.move);
-            if (move.color == 'white') {
-                trow = brow(movestr) - 1;
-            } else {
-                trow = brow(movestr) + 1;
-            }
-            piece = boardspace[trow][tfile];
+            piece = find_attack_pawn(move);
         } else {
             movestr = move.move;
             var trow = brow(movestr);
