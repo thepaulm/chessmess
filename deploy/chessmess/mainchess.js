@@ -3,10 +3,6 @@ function set_piece_location(piece, x, y) {
     piece.style.top = `${y}px`;
 }
 
-function ascii(c) {
-    return c.charCodeAt(0);
-}
-
 function piece_to_square(board, piece, file, row) {
     var squares = 8;
     br = board.getBoundingClientRect();
@@ -79,12 +75,24 @@ function load_piece(filename, position) {
     });
 }
 
+function make_pgn_handler(board, pgn_paste) {
+    return async function (event) {
+        var moves = parse_move_tree(pgn_paste.value);
+    }
+}
+
 (function () {
     var squares = 8;
     var board = document.getElementById('board')
     board.addEventListener('dragstart', (e) => {
         e.preventDefault();
     });
+    var pgn_paste = document.getElementById('pgn_paste');
+    pgn_paste.style.width = board.width;
+    pgn_paste.style.height = board.width / 4;
+
+    var pgn_run = document.getElementById('pgn_run');
+    pgn_run.addEventListener('click', make_pgn_handler(board, pgn_paste));
 
     load_piece('p.png', 'a7');
     load_piece('p.png', 'b7');
