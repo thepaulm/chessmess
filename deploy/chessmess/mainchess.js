@@ -152,6 +152,26 @@ function is_file(m) {
     return ascii(m) >= ascii('a') && ascii(m) <= ascii('h');
 }
 
+function piece_at(position) {
+    return boardspace[brow(position)][bfile(position)];
+}
+
+function king_at_start(color) {
+    var piece = null;
+    if (color == "black") {
+        piece = piece_at('e8');
+        if (piece.type == 'k' && piece.color == "black") {
+            return piece;
+        }
+    } else {
+        peice = piece_at('e1');
+        if (piece.type == 'k' && piece.color == "white") {
+            return peice;
+        }
+    }
+    return null;
+}
+
 function find_src(color, trow, tfile) {
     /* first check pawn one off */
     var p = boardspace[trow+1][tfile];
@@ -368,18 +388,24 @@ function find_src_type(color, type, trow, tfile, filerestrict) {
 }
 
 function move_piece(piece, position) {
-    var prow = brow(piece.position);
-    var pfile = bfile(piece.position);
-    boardspace[prow][pfile] = null;
+    if (position == "O-O") {
+        var rook = boardspace[brow(piece.position)][7];
+        move_piece(rook, 'g' + piece.position[1]);
+        move_piece(piece, 'f' + piece.position[1]);
+    } else {
+        var prow = brow(piece.position);
+        var pfile = bfile(piece.position);
+        boardspace[prow][pfile] = null;
 
-    prow = brow(position);
-    pfile = bfile(position);
-    boardspace[prow][pfile] = piece;
+        prow = brow(position);
+        pfile = bfile(position);
+        boardspace[prow][pfile] = piece;
 
-    prow = img_row(position);
-    pfile = img_file(position);
-    piece_to_square(board, piece.image, pfile, prow);
-    piece.position = position;
+        prow = img_row(position);
+        pfile = img_file(position);
+        piece_to_square(board, piece.image, pfile, prow);
+        piece.position = position;
+    }
 }
 
 function run_move(move) {
@@ -404,6 +430,9 @@ function run_move(move) {
         var trow = brow(movestr);
         var tfile = bfile(movestr);
         piece = find_src_type(move.color, lower(move.move[0]), trow, tfile, filerestrict);
+    } else if (move.move == "O-O") {
+        movestr = move.move;
+        piece = king_at_start(move.color);
     }
 
     console.log(piece);
