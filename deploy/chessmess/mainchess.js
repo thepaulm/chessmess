@@ -178,7 +178,7 @@ function king_at_start(color) {
     return null;
 }
 
-function find_src(color, trow, tfile) {
+function find_pawn_src(color, trow, tfile) {
     /* first check pawn one off */
     var p = boardspace[trow+1][tfile];
     if (p != null && p.color == color) {
@@ -202,7 +202,6 @@ function find_src(color, trow, tfile) {
             return p;
         }
     }
-    console.log("can't find src piece");
     return null;
 }
 
@@ -428,10 +427,23 @@ function run_move(move) {
     var take = false;
 
     if (is_loc(move.move[0])) {
-        movestr = move.move;
-        var trow = brow(movestr);
-        var tfile = bfile(movestr);
-        piece = find_src(move.color, trow, tfile);
+        if (is_takes(move.move[1])) {
+            movestr = move.move.substr(2);
+            take = true;
+            var trow;
+            var tfile = bfile(move.move);
+            if (move.color == 'white') {
+                trow = brow(movestr) - 1;
+            } else {
+                trow = brow(movestr) + 1;
+            }
+            piece = boardspace[trow][tfile];
+        } else {
+            movestr = move.move;
+            var trow = brow(movestr);
+            var tfile = bfile(movestr);
+            piece = find_pawn_src(move.color, trow, tfile);
+        }
     } else if (is_piece(move.move[0])) {
         var filerestrict = null;
         if (is_file(move.move[1]) && is_file(move.move[2])) {
