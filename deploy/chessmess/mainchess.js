@@ -76,6 +76,9 @@ class Piece {
             this.color = "white";
         }
     }
+    remove_from_board() {
+        this.image.parentElement.removeChild(this.image);
+    }
 }
 
 function load_piece(name, filename, position) {
@@ -150,6 +153,10 @@ function is_piece(m) {
 
 function is_file(m) {
     return ascii(m) >= ascii('a') && ascii(m) <= ascii('h');
+}
+
+function is_takes(m) {
+    return m == 'x';
 }
 
 function piece_at(position) {
@@ -387,11 +394,11 @@ function find_src_type(color, type, trow, tfile, filerestrict) {
     return null;
 }
 
-function move_piece(piece, position) {
+function move_piece(piece, position, take) {
     if (position == "O-O") {
         var rook = boardspace[brow(piece.position)][7];
-        move_piece(rook, 'g' + piece.position[1]);
-        move_piece(piece, 'f' + piece.position[1]);
+        move_piece(rook, 'f' + piece.position[1], take);
+        move_piece(piece, 'g' + piece.position[1], take);
     } else {
         var prow = brow(piece.position);
         var pfile = bfile(piece.position);
@@ -399,6 +406,13 @@ function move_piece(piece, position) {
 
         prow = brow(position);
         pfile = bfile(position);
+        if (take) {
+            if (boardspace[prow][pfile] == null) {
+                console.log("Supposed to take? Not here: " + position);
+            } else {
+                boardspace[prow][pfile].remove_from_board();
+            }
+        }
         boardspace[prow][pfile] = piece;
 
         prow = img_row(position);
@@ -410,9 +424,9 @@ function move_piece(piece, position) {
 
 function run_move(move) {
     console.log("run: " + move.move);
-
     var piece = null;
     var movestr = null;
+    var take = false;
 
     if (is_loc(move.move[0])) {
         movestr = move.move;
@@ -424,6 +438,9 @@ function run_move(move) {
         if (is_file(move.move[1]) && is_file(move.move[2])) {
             movestr = move.move.substr(2);
             filerestrict = ascii(move.move[1]) - ascii('a');
+        } else if (is_takes(move.move[1])) {
+            movestr = move.move.substr(2);
+            take = true;
         } else {
             movestr = move.move.substr(1);
         }
@@ -435,9 +452,10 @@ function run_move(move) {
         piece = king_at_start(move.color);
     }
 
-    console.log(piece);
     if (piece != null) {
-        move_piece(piece, movestr);
+        move_piece(piece, movestr, take);
+    } else {
+        console.log("CANT RUN: " + move.move);
     }
 
 }
@@ -461,7 +479,6 @@ function make_move() {
 
 function key_press(k) {
     if (k.key == "ArrowRight") {
-        console.log("next move");
         make_move();
     } else if (k.key == "ArrowLeft") {
         console.log("last move");
@@ -485,7 +502,7 @@ function clean_old_boardspace() {
             for (let j = 0; j < squares; j++) {
                 if (boardspace[i][j] != null) {
                     var p = boardspace[i][j];
-                    p.image.parentElement.removeChild(p.image);
+                    p.remove_from_board();
                 }
             }
         }
