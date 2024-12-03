@@ -461,6 +461,10 @@ function move_piece(piece, position, take) {
         var rook = boardspace[brow(piece.position)][7];
         move_piece(rook, 'f' + piece.position[1], take);
         move_piece(piece, 'g' + piece.position[1], take);
+    } else if (position == "O-O-O") {
+        var rook = boardspace[brow(piece.position)][0];
+        move_piece(rook, 'd' + piece.position[1], take);
+        move_piece(piece, 'c' + piece.position[1], take);
     } else {
         var prow = brow(piece.position);
         var pfile = bfile(piece.position);
@@ -528,7 +532,7 @@ function run_move(move) {
         var trow = brow(movestr);
         var tfile = bfile(movestr);
         piece = find_src_type(move.color, move.move[0], trow, tfile, filerestrict);
-    } else if (move.move == "O-O") {
+    } else if (move.move == "O-O" || move.move == "O-O-O") {
         movestr = move.move;
         piece = king_at_start(move.color);
     }
