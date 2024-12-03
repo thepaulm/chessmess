@@ -142,6 +142,13 @@ function make_pgn_handler(board, pgn_paste) {
     }
 }
 
+function make_clear_handler(tarea) {
+    return async function (event) {
+        tarea.value = "";
+        reload_board();
+    }
+}
+
 function is_loc(m) {
     return ascii(m) >= ascii('a') && ascii(m) <= ascii('h');
 }
@@ -166,13 +173,17 @@ function king_at_start(color) {
     var piece = null;
     if (color == "black") {
         piece = piece_at('e8');
-        if (piece.type == 'K' && piece.color == "black") {
-            return piece;
+        if (piece != null) {
+            if (piece.type == 'K' && piece.color == "black") {
+                return piece;
+            }
         }
     } else {
-        peice = piece_at('e1');
-        if (piece.type == 'K' && piece.color == "white") {
-            return peice;
+        piece = piece_at('e1');
+        if (piece != null) {
+            if (piece.type == 'K' && piece.color == "white") {
+                return piece;
+            }
         }
     }
     return null;
@@ -627,11 +638,13 @@ function reload_board() {
         e.preventDefault();
     });
     var pgn_paste = document.getElementById('pgn_paste');
+    var clear = document.getElementById('clear');
     pgn_paste.style.width = board.width;
     pgn_paste.style.height = board.width / 4;
 
     var pgn_run = document.getElementById('pgn_run');
     pgn_run.addEventListener('click', make_pgn_handler(board, pgn_paste));
+    clear.addEventListener('click', make_clear_handler(pgn_paste));
 
     document.onkeydown = key_press;
 
