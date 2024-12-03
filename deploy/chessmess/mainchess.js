@@ -379,7 +379,54 @@ function find_queen_src(color, trow, tfile, filerestrict) {
     return piece;
 }
 
+function get_king(color, trow, tfile, rowoff, fileoff) {
+    trow += rowoff;
+    tfile += fileoff;
+
+    if (trow > 0 && trow <= 8 && tfile >=0 && tfile < 8) {
+        var piece = boardspace[trow][tfile];
+        if (piece != null && piece.color == color && piece.type == "K") {
+            return piece;
+        }
+    }
+    return null;
+}
+
 function find_king_src(color, trow, tfile) {
+    var piece = get_king(color, trow, tfile, -1, -1);
+    if (piece != null) {
+        return piece;
+    }
+    var piece = get_king(color, trow, tfile, -1, 0);
+    if (piece != null) {
+        return piece;
+    }
+    var piece = get_king(color, trow, tfile, -1, 1);
+    if (piece != null) {
+        return piece;
+    }
+
+    var piece = get_king(color, trow, tfile, 0, -1);
+    if (piece != null) {
+        return piece;
+    }
+    var piece = get_king(color, trow, tfile, 0, 1);
+    if (piece != null) {
+        return piece;
+    }
+
+    var piece = get_king(color, trow, tfile, 1, -1);
+    if (piece != null) {
+        return piece;
+    }
+    var piece = get_king(color, trow, tfile, 1, 0);
+    if (piece != null) {
+        return piece;
+    }
+    var piece = get_king(color, trow, tfile, 1, 1);
+    if (piece != null) {
+        return piece;
+    }
     return null;
 }
 
