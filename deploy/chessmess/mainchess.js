@@ -456,6 +456,11 @@ function find_src_type(color, type, trow, tfile, filerestrict) {
     return null;
 }
 
+function piece_taken(row, file) {
+    boardspace[row][file].remove_from_board();
+    boardspace[row][file] = null;
+}
+
 function move_piece(piece, position, take) {
     if (position == "O-O") {
         var rook = boardspace[brow(piece.position)][7];
@@ -474,9 +479,28 @@ function move_piece(piece, position, take) {
         pfile = bfile(position);
         if (take) {
             if (boardspace[prow][pfile] == null) {
-                console.log("Supposed to take? Not here: " + position);
+                /* check for en passant */
+                if (piece.type == 'P') {
+                    if (piece.color == "black" && prow == 3) {
+                        if (boardspace[prow+1][pfile].type == "P" && boardspace[prow+1][pfile].color == "white") {
+                            piece_taken(prow + 1, pfile);
+                        } else {
+                            console.log("Supposed to take? (en passant black) Not here: " + position);
+                        }
+                    } else if (piece.color == "white" && prow == 6) {
+                        if (boardspace[prow-1][pfile].type == "P" && boardspace[prow-1][pfile].color == "black") {
+                            piece_taken(prow - 1, pfile);
+                        } else {
+                            console.log("Supposed to take? (en passant white) Not here: " + position);
+                        }
+                    } else {
+                        console.log("Supposed to take? (en passant) Not here: " + position);
+                    }
+                } else {
+                    console.log("Supposed to take? Not here: " + position);
+                }
             } else {
-                boardspace[prow][pfile].remove_from_board();
+                piece_taken(prow, pfile);
             }
         }
         boardspace[prow][pfile] = piece;
