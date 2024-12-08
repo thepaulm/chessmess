@@ -88,6 +88,7 @@ function place_piece_image(name, p, position) {
     var pfile = bfile(position);
     boardspace[prow][pfile] = piece;
 
+    p.isdragging = false;
     p.addEventListener('mousedown', (e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -113,10 +114,22 @@ function place_piece_image(name, p, position) {
     });
 }
 
+function place_piece(type, position) {
+    var p = piece_images[type];
+    p = p.cloneNode(true);
+
+    document.body.appendChild(p);
+    p.onload = () => {
+        p.style.position = 'absolute';
+        set_piece_image(board, p, position);
+    };
+
+    place_piece_image(type, p, position);
+}
+
 function load_piece(name, filename, position) {
     var p = new Image();
     p.src = filename;
-    p.isdragging = false;
     document.body.appendChild(p);
     p.onload = () => {
         p.style.position = 'absolute';
@@ -673,41 +686,41 @@ function reload_board() {
     load_piece_image('k', 'k.png');
     load_piece_image('K', 'K.png');
 
-    load_piece('p', 'p.png', 'a7');
-    load_piece('p', 'p.png', 'b7');
-    load_piece('p', 'p.png', 'c7');
-    load_piece('p', 'p.png', 'd7');
-    load_piece('p', 'p.png', 'e7');
-    load_piece('p', 'p.png', 'f7');
-    load_piece('p', 'p.png', 'g7');
-    load_piece('p', 'p.png', 'h7');
+    place_piece('p', 'a7');
+    place_piece('p', 'b7');
+    place_piece('p', 'c7');
+    place_piece('p', 'd7');
+    place_piece('p', 'e7');
+    place_piece('p', 'f7');
+    place_piece('p', 'g7');
+    place_piece('p', 'h7');
 
-    load_piece('r', 'r.png', 'a8');
-    load_piece('n', 'n.png', 'b8');
-    load_piece('b', 'b.png', 'c8');
-    load_piece('q', 'q.png', 'd8');
-    load_piece('k', 'k.png', 'e8');
-    load_piece('b', 'b.png', 'f8');
-    load_piece('n', 'n.png', 'g8');
-    load_piece('r', 'r.png', 'h8');
+    place_piece('r', 'a8');
+    place_piece('n', 'b8');
+    place_piece('b', 'c8');
+    place_piece('q', 'd8');
+    place_piece('k', 'e8');
+    place_piece('b', 'f8');
+    place_piece('n', 'g8');
+    place_piece('r', 'h8');
 
-    load_piece('P', 'P.png', 'a2');
-    load_piece('P', 'P.png', 'b2');
-    load_piece('P', 'P.png', 'c2');
-    load_piece('P', 'P.png', 'd2');
-    load_piece('P', 'P.png', 'e2');
-    load_piece('P', 'P.png', 'f2');
-    load_piece('P', 'P.png', 'g2');
-    load_piece('P', 'P.png', 'h2');
+    place_piece('P', 'a2');
+    place_piece('P', 'b2');
+    place_piece('P', 'c2');
+    place_piece('P', 'd2');
+    place_piece('P', 'e2');
+    place_piece('P', 'f2');
+    place_piece('P', 'g2');
+    place_piece('P', 'h2');
 
-    load_piece('R', 'R.png', 'a1');
-    load_piece('N', 'N.png', 'b1');
-    load_piece('B', 'B.png', 'c1');
-    load_piece('Q', 'Q.png', 'd1');
-    load_piece('K', 'K.png', 'e1');
-    load_piece('B', 'B.png', 'f1');
-    load_piece('N', 'N.png', 'g1');
-    load_piece('R', 'R.png', 'h1');
+    place_piece('R', 'a1');
+    place_piece('N', 'b1');
+    place_piece('B', 'c1');
+    place_piece('Q', 'd1');
+    place_piece('K', 'e1');
+    place_piece('B', 'f1');
+    place_piece('N', 'g1');
+    place_piece('R', 'h1');
 }
 
 (function () {
