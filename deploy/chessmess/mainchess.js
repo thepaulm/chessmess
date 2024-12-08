@@ -5,6 +5,7 @@ let board = null;
 let moves = null;
 let boardspace = null;
 let boardspace_at = null;
+let piece_images = new Map();
 
 function img_row(cpos) {
     return 8 - Number(cpos[1]);
@@ -57,7 +58,7 @@ function center_piece(board, piece) {
     piece_to_square(board, piece, Math.floor(board_center_x / sw), Math.floor(board_center_y / sh));
 }
 
-function set_piece(board, piece, cpos) {
+function set_piece_image(board, piece, cpos) {
     var prow = img_row(cpos);
     var pfile = img_file(cpos);
 
@@ -81,16 +82,7 @@ class Piece {
     }
 }
 
-function load_piece(name, filename, position) {
-    var p = new Image();
-    p.src = filename;
-    p.isdragging = false;
-    p.onload = () => {
-        document.body.appendChild(p);
-        p.style.position = 'absolute';
-        set_piece(board, p, position);
-    };
-
+function place_piece_image(name, p, position) {
     var piece = new Piece(name, p, position);
     var prow = brow(position);
     var pfile = bfile(position);
@@ -119,6 +111,19 @@ function load_piece(name, filename, position) {
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', stop);
     });
+}
+
+function load_piece(name, filename, position) {
+    var p = new Image();
+    p.src = filename;
+    p.isdragging = false;
+    document.body.appendChild(p);
+    p.onload = () => {
+        p.style.position = 'absolute';
+        set_piece_image(board, p, position);
+    };
+
+    place_piece_image(name, p, position);
 }
 
 function print_moves() {
@@ -159,6 +164,10 @@ function is_piece(m) {
 
 function is_file(m) {
     return ascii(m) >= ascii('a') && ascii(m) <= ascii('h');
+}
+
+function is_row(m) {
+    return ascii(m) >= ascii('1') && ascii(m) <= ascii('8');
 }
 
 function is_takes(m) {
@@ -241,7 +250,7 @@ function search_incr(color, type, rowdir, filedir, trow, tfile) {
     }
 }
 
-function find_knight_src(color, trow, tfile, filerestrict) {
+function find_knight_src(color, trow, tfile, filerestrict, rowrestrict) {
     var srow = trow;
     var sfile = tfile;
 
@@ -332,7 +341,7 @@ function find_knight_src(color, trow, tfile, filerestrict) {
     return null;
 }
 
-function find_bishop_pattern(type, color, trow, tfile, filerestrict) {
+function find_bishop_pattern(type, color, trow, tfile, filerestrict, rowrestrict) {
     var ret = null;
     ret = search_incr(color, type, 1, 1, trow, tfile);
     if (ret != null) {
@@ -353,8 +362,9 @@ function find_bishop_pattern(type, color, trow, tfile, filerestrict) {
     return null;
 }
 
-function find_rook_pattern(type, color, trow, tfile, filerestrict) {
+function find_rook_pattern(type, color, trow, tfile) {
     var ret = null;
+
     ret = search_incr(color, type, 0, 1, trow, tfile);
     if (ret != null) {
         return ret;
@@ -374,18 +384,18 @@ function find_rook_pattern(type, color, trow, tfile, filerestrict) {
     return null;
 }
 
-function find_bishop_src(color, trow, tfile, filerestrict) {
+function find_bishop_src(color, trow, tfile, filerestrict, rowrestrict) {
     return find_bishop_pattern('B', color, trow, tfile, filerestrict);
 }
 
-function find_rook_src(color, trow, tfile, filerestrict) {
-    return find_rook_pattern('R', color, trow, tfile, filerestrict);
+function find_rook_src(color, trow, tfile, filerestrict, rowrestrict) {
+    return find_rook_pattern('R', color, trow, tfile);
 }
 
-function find_queen_src(color, trow, tfile, filerestrict) {
+function find_queen_src(color, trow, tfile, filerestrict, rowrestrict) {
     var piece = find_bishop_pattern('Q', color, trow, tfile, filerestrict);
     if (piece == null) {
-        piece = find_rook_pattern('Q', color, trow, tfile, filerestrict);
+        piece = find_rook_pattern('Q', color, trow, tfile);
     }
     return piece;
 }
@@ -441,15 +451,27 @@ function find_king_src(color, trow, tfile) {
     return null;
 }
 
-function find_src_type(color, type, trow, tfile, filerestrict) {
+function find_rook_at(color, srow, sfile) {
+    var piece = boardspace[srow][sfile];
+    if (piece != null && piece.type == 'R' && piece.color == color) {
+        return piece;
+    }
+    return null;
+}
+
+function find_src_type(color, type, trow, tfile, filerestrict, rowrestrict) {
     if (type == 'B') {
-        return find_bishop_src(color, trow, tfile, filerestrict);
+        return find_bishop_src(color, trow, tfile, filerestrict, rowrestrict);
     } else if (type == 'N') {
-        return find_knight_src(color, trow, tfile, filerestrict);
+        return find_knight_src(color, trow, tfile, filerestrict, rowrestrict);
     } else if (type == 'Q') {
-        return find_queen_src(color, trow, tfile, filerestrict);
+        return find_queen_src(color, trow, tfile, filerestrict, rowrestrict);
     } else if (type == 'R') {
-        return find_rook_src(color, trow, tfile, filerestrict);
+        if (rowrestrict) {
+            return find_rook_at(color, rowrestrict, tfile);
+        } else {
+            return find_rook_src(color, trow, tfile, filerestrict, rowrestrict);
+        }
     } else if (type == "K") {
         return find_king_src(color, trow, tfile);
     }
@@ -544,9 +566,13 @@ function run_move(move) {
         }
     } else if (is_piece(move.move[0])) {
         var filerestrict = null;
+        var rowrestrict = null;
         if (is_file(move.move[1]) && is_file(move.move[2])) {
             movestr = move.move.substr(2);
             filerestrict = ascii(move.move[1]) - ascii('a');
+        } else if (is_row(move.move[1])) {
+            movestr = move.move.substr(2);
+            rowrestrict = ascii(move.move[1]) - ascii('0');
         } else if (is_takes(move.move[1])) {
             movestr = move.move.substr(2);
             take = true;
@@ -555,7 +581,7 @@ function run_move(move) {
         }
         var trow = brow(movestr);
         var tfile = bfile(movestr);
-        piece = find_src_type(move.color, move.move[0], trow, tfile, filerestrict);
+        piece = find_src_type(move.color, move.move[0], trow, tfile, filerestrict, rowrestrict);
     } else if (move.move == "O-O" || move.move == "O-O-O") {
         movestr = move.move;
         piece = king_at_start(move.color);
@@ -618,10 +644,32 @@ function clean_old_boardspace() {
     }
 }
 
+function load_piece_image(type, filename) {
+    var p = new Image();
+    p.onload = () => {
+        p.style.position = 'absolute';
+    }
+    p.src = filename;
+    piece_images[type] = p;
+}
+
 function reload_board() {
     clean_old_boardspace();
     make_boardspace();
     boardspace_at = null;
+
+    load_piece_image('p', 'p.png');
+    load_piece_image('P', 'P.png');
+    load_piece_image('r', 'r.png');
+    load_piece_image('R', 'R.png');
+    load_piece_image('n', 'n.png');
+    load_piece_image('N', 'N.png');
+    load_piece_image('b', 'b.png');
+    load_piece_image('B', 'B.png');
+    load_piece_image('q', 'q.png');
+    load_piece_image('Q', 'Q.png');
+    load_piece_image('k', 'k.png');
+    load_piece_image('K', 'K.png');
 
     load_piece('p', 'p.png', 'a7');
     load_piece('p', 'p.png', 'b7');
