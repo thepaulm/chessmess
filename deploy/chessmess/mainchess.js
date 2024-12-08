@@ -469,6 +469,8 @@ function find_src_type(color, type, trow, tfile, filerestrict, rowrestrict) {
     } else if (type == 'R') {
         if (rowrestrict) {
             return find_rook_at(color, rowrestrict, tfile);
+        } else if (filerestrict) {
+            return find_rook_at(color, trow, filerestrict);
         } else {
             return find_rook_src(color, trow, tfile, filerestrict, rowrestrict);
         }
