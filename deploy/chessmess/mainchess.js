@@ -169,18 +169,6 @@ function set_board_state(gs) {
     }
 }
 
-function load_piece(name, filename, position) {
-    var p = new Image();
-    p.src = filename;
-    document.body.appendChild(p);
-    p.onload = () => {
-        p.style.position = 'absolute';
-        set_piece_image(board, p, position);
-    };
-
-    place_piece_image(name, p, position);
-}
-
 function print_moves() {
     var at = moves.top;
 
