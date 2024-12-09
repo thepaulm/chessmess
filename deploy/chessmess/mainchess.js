@@ -126,8 +126,11 @@ function place_piece_image(name, p, position) {
 function place_piece(type, position) {
     var p = piece_images[type];
     p = p.cloneNode(true);
+    p.style.position = 'absolute';
+    set_piece_location(p, 0, 0);
 
     document.body.appendChild(p);
+
     p.onload = () => {
         p.style.position = 'absolute';
         set_piece_image(board, p, position);
