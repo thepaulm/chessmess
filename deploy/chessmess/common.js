@@ -2,6 +2,14 @@ function ascii(c) {
     return c.charCodeAt(0);
 }
 
+function num2alpha(n) {
+    return String.fromCharCode(ascii('0') + n);
+}
+
+function lower2alpha(l) {
+    return String.fromCharCode(ascii('a') + l);
+}
+
 function isnum(c) {
     return ascii(c) >= ascii('0') && ascii(c) <= ascii('9');
 }

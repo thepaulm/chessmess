@@ -5,6 +5,7 @@ let board = null;
 let moves = null;
 let boardspace = null;
 let boardspace_at = null;
+
 let piece_images = new Map();
 
 function img_row(cpos) {
@@ -26,6 +27,12 @@ function bfile(cpos) {
 function set_piece_location(piece, x, y) {
     piece.style.left = `${x}px`;
     piece.style.top = `${y}px`;
+}
+
+function make_position(row, file) {
+    let charf = lower2alpha(file);
+    let charr = num2alpha(row);
+    return charf + charr;
 }
 
 function piece_to_square(board, piece, file, row) {
@@ -125,6 +132,35 @@ function place_piece(type, position) {
     };
 
     place_piece_image(type, p, position);
+}
+
+function place_game_piece(gs, type, position) {
+    var prow = brow(position);
+    var pfile = bfile(position);
+
+    gs[prow][pfile] = type;
+}
+
+function set_board_state(gs) {
+    for (let row = 1; row <= squares; row++) {
+        for (let file = 0; file < squares; file++) {
+
+            /* handle gs is empty - just clear the boardspace */
+            if (gs[row][file] == null && boardspace[row][file] != null) {
+                piece_taken(row, file);
+            } else if (gs[row][file] == null) {
+                continue;
+            } else {
+                var piece = boardspace[row][file];
+                var name = gs[row][file];
+                /* handle boardspace doesn't match - clear the boardspace and place */
+                if (piece != null && piece.name != name) {
+                    piece_taken(row, file);
+                }
+                place_piece(name, make_position(row, file));
+            }
+        }
+    }
 }
 
 function load_piece(name, filename, position) {
@@ -646,6 +682,18 @@ function make_boardspace() {
     }
 }
 
+function make_gamespace() {
+    var gs = new Array(squares);
+    /* adding 1 to the rows so we can index 1-8 like the moves are called */
+    for (let i = 0; i < squares + 1; i++) {
+        gs[i] = new Array(squares);
+        for (let j = 0; j < squares; j++) {
+            gs[i][j] = null;
+        }
+    }
+    return gs;
+}
+
 function clean_old_boardspace() {
     if (boardspace != null) {
         for (let i = 0; i < squares + 1; i++) {
@@ -686,41 +734,45 @@ function reload_board() {
     load_piece_image('k', 'k.png');
     load_piece_image('K', 'K.png');
 
-    place_piece('p', 'a7');
-    place_piece('p', 'b7');
-    place_piece('p', 'c7');
-    place_piece('p', 'd7');
-    place_piece('p', 'e7');
-    place_piece('p', 'f7');
-    place_piece('p', 'g7');
-    place_piece('p', 'h7');
+    var gs = make_gamespace();
 
-    place_piece('r', 'a8');
-    place_piece('n', 'b8');
-    place_piece('b', 'c8');
-    place_piece('q', 'd8');
-    place_piece('k', 'e8');
-    place_piece('b', 'f8');
-    place_piece('n', 'g8');
-    place_piece('r', 'h8');
+    place_game_piece(gs, 'p', 'a7');
+    place_game_piece(gs, 'p', 'b7');
+    place_game_piece(gs, 'p', 'c7');
+    place_game_piece(gs, 'p', 'd7');
+    place_game_piece(gs, 'p', 'e7');
+    place_game_piece(gs, 'p', 'f7');
+    place_game_piece(gs, 'p', 'g7');
+    place_game_piece(gs, 'p', 'h7');
 
-    place_piece('P', 'a2');
-    place_piece('P', 'b2');
-    place_piece('P', 'c2');
-    place_piece('P', 'd2');
-    place_piece('P', 'e2');
-    place_piece('P', 'f2');
-    place_piece('P', 'g2');
-    place_piece('P', 'h2');
+    place_game_piece(gs, 'r', 'a8');
+    place_game_piece(gs, 'n', 'b8');
+    place_game_piece(gs, 'b', 'c8');
+    place_game_piece(gs, 'q', 'd8');
+    place_game_piece(gs, 'k', 'e8');
+    place_game_piece(gs, 'b', 'f8');
+    place_game_piece(gs, 'n', 'g8');
+    place_game_piece(gs, 'r', 'h8');
 
-    place_piece('R', 'a1');
-    place_piece('N', 'b1');
-    place_piece('B', 'c1');
-    place_piece('Q', 'd1');
-    place_piece('K', 'e1');
-    place_piece('B', 'f1');
-    place_piece('N', 'g1');
-    place_piece('R', 'h1');
+    place_game_piece(gs, 'P', 'a2');
+    place_game_piece(gs, 'P', 'b2');
+    place_game_piece(gs, 'P', 'c2');
+    place_game_piece(gs, 'P', 'd2');
+    place_game_piece(gs, 'P', 'e2');
+    place_game_piece(gs, 'P', 'f2');
+    place_game_piece(gs, 'P', 'g2');
+    place_game_piece(gs, 'P', 'h2');
+
+    place_game_piece(gs, 'R', 'a1');
+    place_game_piece(gs, 'N', 'b1');
+    place_game_piece(gs, 'B', 'c1');
+    place_game_piece(gs, 'Q', 'd1');
+    place_game_piece(gs, 'K', 'e1');
+    place_game_piece(gs, 'B', 'f1');
+    place_game_piece(gs, 'N', 'g1');
+    place_game_piece(gs, 'R', 'h1');
+
+    set_board_state(gs);
 }
 
 (function () {
