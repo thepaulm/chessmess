@@ -155,9 +155,13 @@ function set_board_state(gs) {
             } else {
                 var piece = boardspace[row][file];
                 var name = gs[row][file];
-                /* handle boardspace doesn't match - clear the boardspace and place */
-                if (piece != null && piece.name != name) {
-                    piece_taken(row, file);
+                if (piece != null) {
+                    /* handle boardspace doesn't match - clear the boardspace and place */
+                    if (piece.name != name) {
+                        piece_taken(row, file);
+                    } else {
+                        continue;
+                    }
                 }
                 place_piece(name, make_position(row, file));
             }
