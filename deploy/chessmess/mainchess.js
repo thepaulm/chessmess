@@ -6,6 +6,8 @@ let moves = null;
 let boardspace = null;
 let boardspace_at = null;
 
+let initial_gs = null;
+
 let piece_images = new Map();
 
 function img_row(cpos) {
@@ -192,6 +194,7 @@ function make_pgn_handler(board, pgn_paste) {
     return async function (event) {
         reload_board();
         moves = parse_move_tree(pgn_paste.value);
+        moves.set_initial_gs(initial_gs);
         print_moves();
     }
 }
@@ -534,19 +537,20 @@ function piece_taken(row, file) {
     boardspace[row][file] = null;
 }
 
-function move_piece(piece, position, take) {
+function move_piece(piece, position, take, gs) {
     if (position == "O-O") {
         var rook = boardspace[brow(piece.position)][7];
-        move_piece(rook, 'f' + piece.position[1], take);
-        move_piece(piece, 'g' + piece.position[1], take);
+        move_piece(rook, 'f' + piece.position[1], take, gs);
+        move_piece(piece, 'g' + piece.position[1], take, gs);
     } else if (position == "O-O-O") {
         var rook = boardspace[brow(piece.position)][0];
-        move_piece(rook, 'd' + piece.position[1], take);
-        move_piece(piece, 'c' + piece.position[1], take);
+        move_piece(rook, 'd' + piece.position[1], take, gs);
+        move_piece(piece, 'c' + piece.position[1], take, gs);
     } else {
         var prow = brow(piece.position);
         var pfile = bfile(piece.position);
         boardspace[prow][pfile] = null;
+        gs[prow][pfile] = null;
 
         prow = brow(position);
         pfile = bfile(position);
@@ -557,12 +561,14 @@ function move_piece(piece, position, take) {
                     if (piece.color == "black" && prow == 3) {
                         if (boardspace[prow+1][pfile].type == "P" && boardspace[prow+1][pfile].color == "white") {
                             piece_taken(prow + 1, pfile);
+                            gs[prow][pfile] = null;
                         } else {
                             console.log("Supposed to take? (en passant black) Not here: " + position);
                         }
                     } else if (piece.color == "white" && prow == 6) {
                         if (boardspace[prow-1][pfile].type == "P" && boardspace[prow-1][pfile].color == "black") {
                             piece_taken(prow - 1, pfile);
+                            gs[prow][pfile] = null;
                         } else {
                             console.log("Supposed to take? (en passant white) Not here: " + position);
                         }
@@ -577,6 +583,7 @@ function move_piece(piece, position, take) {
             }
         }
         boardspace[prow][pfile] = piece;
+        gs[prow][pfile] = piece.name;
 
         prow = img_row(position);
         pfile = img_file(position);
@@ -598,7 +605,7 @@ function find_attack_pawn(move) {
     return piece;
 }
 
-function run_move(move) {
+function run_move(move, gs) {
     console.log("run: " + move.move);
     var piece = null;
     var movestr = null;
@@ -639,11 +646,20 @@ function run_move(move) {
     }
 
     if (piece != null) {
-        move_piece(piece, movestr, take);
+        move_piece(piece, movestr, take, gs);
     } else {
         console.log("CANT RUN: " + move.move);
     }
+}
 
+function prev_move() {
+    var at = boardspace_at.prev;
+    if (at == null) {
+        console.log("No prev moves.");
+        return;
+    }
+    set_board_state(at.gs);
+    boardspace_at = at;
 }
 
 function make_move() {
@@ -659,15 +675,17 @@ function make_move() {
         return;
     }
     var move = boardspace_at.moves[0]; // could be a choice here
-    run_move(move);
+    var gs = copy_gamespace(boardspace_at.gs);
+    run_move(move, gs);
     boardspace_at = move.next;
+    boardspace_at.set_gs(gs);
 }
 
 function key_press(k) {
     if (k.key == "ArrowRight") {
         make_move();
     } else if (k.key == "ArrowLeft") {
-        console.log("last move");
+        prev_move();
     }
 }
 
@@ -692,6 +710,17 @@ function make_gamespace() {
         }
     }
     return gs;
+}
+
+function copy_gamespace(gs) {
+    var newgs = make_gamespace();
+    /* adding 1 to the rows so we can index 1-8 like the moves are called */
+    for (let i = 0; i < squares + 1; i++) {
+        for (let j = 0; j < squares; j++) {
+            newgs[i][j] = gs[i][j];
+        }
+    }
+    return newgs;
 }
 
 function clean_old_boardspace() {
@@ -773,6 +802,9 @@ function reload_board() {
     place_game_piece(gs, 'R', 'h1');
 
     set_board_state(gs);
+    if (initial_gs == null) {
+        initial_gs = gs;
+    }
 }
 
 (function () {

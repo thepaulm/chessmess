@@ -8,7 +8,7 @@ MoveTree
  */
 
 class Move {
-    constructor(color, move_number, move) {
+    constructor(color, move_number, move, prev) {
         this.color = color;
         this.move_number = move_number;
         this.move = move;
@@ -18,17 +18,23 @@ class Move {
         } else {
             nextcolor = "white";
         }
-        this.next = new MoveOptionNode(nextcolor);
+        this.next = new MoveOptionNode(nextcolor, prev);
     }
 }
 class MoveOptionNode {
-    constructor(color) {
+    constructor(color, prev) {
         this.color = color;
         this.moves = new Array();
+        this.gs = null;
+        this.prev = prev;
+    }
+
+    set_gs(gs) {
+        this.gs = gs;
     }
 
     add_move(move_number, move) {
-        var nextm = new Move(this.color, move_number, move);
+        var nextm = new Move(this.color, move_number, move, this);
         this.moves.push(nextm);
         return nextm.next;
     }
@@ -36,7 +42,10 @@ class MoveOptionNode {
 
 class MoveTree {
     constructor() {
-        this.top = new MoveOptionNode("white");
+        this.top = new MoveOptionNode("white", null);
+    }
+    set_initial_gs(gs) {
+        this.top.gs = gs;
     }
 }
 
