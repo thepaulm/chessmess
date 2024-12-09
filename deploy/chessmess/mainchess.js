@@ -248,24 +248,24 @@ function king_at_start(color) {
 function find_pawn_src(color, trow, tfile) {
     /* first check pawn one off */
     var p = boardspace[trow+1][tfile];
-    if (p != null && p.color == color) {
+    if (p != null && p.type == "P" && p.color == color) {
         return p;
     }
     p = boardspace[trow-1][tfile];
-    if (p != null && p.color == color) {
+    if (p != null && p.type == "P" && p.color == color) {
         return p;
     }
 
     /* check for first move double */
     if (trow == 4) {
         p = boardspace[trow-2][tfile];
-        if (p != null) {
+        if (p != null && p.type == "P") {
             return p;
         }
     }
     if (trow == 5) {
         p = boardspace[trow + 2][tfile];
-        if (p != null) {
+        if (p != null && p.type == "P") {
             return p;
         }
     }
