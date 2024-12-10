@@ -27,6 +27,11 @@ class MoveOptionNode {
         this.moves = new Array();
         this.gs = null;
         this.prev = prev;
+        this.moveno = 1;
+    }
+
+    set_moveno(moveno) {
+        this.moveno = moveno;
     }
 
     set_gs(gs) {
@@ -35,7 +40,7 @@ class MoveOptionNode {
 
     add_move(move_number, move) {
         var nextm = new Move(this.color, move_number, move, this);
-        this.moves.push(nextm);
+        var pushno = this.moves.push(nextm);
         return nextm.next;
     }
 }
@@ -47,6 +52,21 @@ class MoveTree {
     set_initial_gs(gs) {
         this.top.gs = gs;
     }
+    console_out() {
+        function recur_console(at) {
+            console.log(at.moveno + ": " + at.color + " has " + at.moves.length + " moves.");
+            for (let i = 0; i < at.moves.length; i++) {
+                console.log("(");
+                console.log("   " + at.moves[i].move);
+                console.log(")");
+            }
+            for (let i = 0; i < at.moves.length; i++) {
+                console.log(" --->  move " + i + ": " + at.moves[i].move);
+                recur_console(at.moves[i].next);
+            }
+        }
+        recur_console(this.top);
+    }
 }
 
 function parse_move_tree(text) {
@@ -55,8 +75,8 @@ function parse_move_tree(text) {
 
     var i = 0;
     var moveno = 1;
-    var inmove = false;
-    var whomove = 0;
+    var handle_alt = false;
+    var branch_stack = new Array();
 
     for (;;) {
         /* Skip leading whitespace */
@@ -89,6 +109,20 @@ function parse_move_tree(text) {
             continue;
         }
 
+        /* Handle ( alternate sequence */
+        if (text[i] == '(') {
+            handle_alt = true;
+            i++;
+            continue;
+        }
+
+        /* Handle ) close anternate */
+        if (text[i] == ')') {
+            at = branch_stack.pop();
+            i++;
+            continue;
+        }
+
         /* Handle move annotation */
         if (isnum(text[i])) {
             moveno = 0;
@@ -103,12 +137,18 @@ function parse_move_tree(text) {
             while (isspace(text[i])) {
                 i++;
             }
-            /*
-            if (!inmove) {
-                console.log("Move no: " + moveno);
+            if (handle_alt) {
+                branch_stack.push(at);
+                while (at.moveno != moveno) {
+                    at = at.prev;
+                }
+                while (at.prev != null && at.prev.moveno == moveno) {
+                    at = at.prev;
+                }
+                handle_alt = false;
+            } else {
+                at.set_moveno(moveno);
             }
-            */
-            inmove = true;
             continue;
         }
 
@@ -127,15 +167,8 @@ function parse_move_tree(text) {
             continue;
         }
 
-        if (whomove == 0) {
-            // console.log("White move: " + move);
-            whomove = 1;
-        } else {
-            // console.log("Black move: " + move);
-            whomove = 0;
-            inmove = false;
-        }
         at = at.add_move(moveno, move);
+        at.set_moveno(moveno);
 
         /* Stop parsing at checkmate */
         if (move.length > 0 && move[move.length-1] == '#') {

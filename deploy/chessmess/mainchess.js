@@ -191,6 +191,7 @@ function make_pgn_handler(board, pgn_paste) {
         moves = parse_move_tree(pgn_paste.value);
         moves.set_initial_gs(initial_gs);
         print_moves();
+        moves.console_out();
     }
 }
 
@@ -670,6 +671,7 @@ function make_move() {
         return;
     }
     var move = boardspace_at.moves[0]; // could be a choice here
+    console.log("[ " + boardspace_at.moves.length + " ] move no: " + boardspace_at.moveno + " is " + move.move);
     var gs = copy_gamespace(boardspace_at.gs);
     run_move(move, gs);
     boardspace_at = move.next;
