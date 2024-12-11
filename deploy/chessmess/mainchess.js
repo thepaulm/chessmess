@@ -40,8 +40,8 @@ function make_position(row, file) {
 
 function piece_to_square(board, piece, file, row) {
     if (is_rotate) {
-        file = 8 - file;
-        row = 8 - row;
+        file = 7 - file;
+        row = 7 - row;
     }
     var squares = 8;
     br = board.getBoundingClientRect();
@@ -61,7 +61,7 @@ function redraw_board() {
         for (let j = 0; j < squares; j++) {
             var piece = boardspace[i][j];
             if (piece != null) {
-                piece_to_square(board, piece.image, brow(piece.position), bfile(piece.position));
+                piece_to_square(board, piece.image, bfile(piece.position), 7 - (brow(piece.position) - 1));
             }
         }
     }
