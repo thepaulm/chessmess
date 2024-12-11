@@ -5,6 +5,7 @@ let board = null;
 let moves = null;
 let boardspace = null;
 let boardspace_at = null;
+let is_rotate = false;
 
 let initial_gs = null;
 
@@ -38,6 +39,10 @@ function make_position(row, file) {
 }
 
 function piece_to_square(board, piece, file, row) {
+    if (is_rotate) {
+        file = 8 - file;
+        row = 8 - row;
+    }
     var squares = 8;
     br = board.getBoundingClientRect();
     pr = piece.getBoundingClientRect();
@@ -49,6 +54,17 @@ function piece_to_square(board, piece, file, row) {
     var py = br.y + (row * sw + (sh / 2)) - (pr.height / 2);
 
     set_piece_location(piece, px, py);
+}
+
+function redraw_board() {
+    for (let i = 1; i < squares + 1; i++) {
+        for (let j = 0; j < squares; j++) {
+            var piece = boardspace[i][j];
+            if (piece != null) {
+                piece_to_square(board, piece.image, brow(piece.position), bfile(piece.position));
+            }
+        }
+    }
 }
 
 function center_piece(board, piece) {
@@ -185,7 +201,7 @@ function print_moves() {
     }
 }
 
-function make_pgn_handler(board, pgn_paste) {
+function make_pgn_handler(pgn_paste) {
     return async function (event) {
         reload_board();
         moves = parse_move_tree(pgn_paste.value);
@@ -200,6 +216,17 @@ function make_clear_handler(tarea) {
         tarea.value = "";
         reload_board();
     }
+}
+
+async function rotate_board(event) {
+    if (is_rotate) {
+        board.style.transform = "";
+        is_rotate = false;
+    } else {
+        board.style.transform = "rotate(180deg)";
+        is_rotate = true;
+    }
+    redraw_board();
 }
 
 function is_loc(m) {
@@ -811,12 +838,14 @@ function reload_board() {
     });
     var pgn_paste = document.getElementById('pgn_paste');
     var clear = document.getElementById('clear');
+    var rotate = document.getElementById('rotate');
     pgn_paste.style.width = board.width;
     pgn_paste.style.height = board.width / 4;
 
     var pgn_run = document.getElementById('pgn_run');
-    pgn_run.addEventListener('click', make_pgn_handler(board, pgn_paste));
+    pgn_run.addEventListener('click', make_pgn_handler(pgn_paste));
     clear.addEventListener('click', make_clear_handler(pgn_paste));
+    rotate.addEventListener('click', rotate_board);
 
     document.onkeydown = key_press;
 
