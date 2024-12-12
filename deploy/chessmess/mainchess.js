@@ -542,9 +542,9 @@ function find_src_type(color, type, trow, tfile, filerestrict, rowrestrict) {
     } else if (type == 'Q') {
         return find_queen_src(color, trow, tfile, filerestrict, rowrestrict);
     } else if (type == 'R') {
-        if (rowrestrict) {
+        if (rowrestrict != null) {
             return find_rook_at(color, rowrestrict, tfile);
-        } else if (filerestrict) {
+        } else if (filerestrict != null) {
             return find_rook_at(color, trow, filerestrict);
         } else {
             return find_rook_src(color, trow, tfile, filerestrict, rowrestrict);
