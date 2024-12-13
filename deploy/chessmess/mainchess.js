@@ -786,6 +786,8 @@ function reload_board() {
     load_piece_image('Q', 'Q.png');
     load_piece_image('k', 'k.png');
     load_piece_image('K', 'K.png');
+    load_piece_image('bad', 'annotation_bad.png')
+    load_piece_image('good', 'annotation_good.png')
 
     var gs = make_gamespace();
 
