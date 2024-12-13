@@ -139,7 +139,7 @@ function place_piece_image(name, p, position) {
     });
 }
 
-function place_piece(type, position) {
+async function place_piece(type, position) {
     var p = piece_images[type];
     p = p.cloneNode(true);
     p.style.position = 'absolute';
@@ -147,11 +147,14 @@ function place_piece(type, position) {
 
     document.body.appendChild(p);
 
-    p.onload = () => {
-        p.style.position = 'absolute';
-        set_piece_image(board, p, position);
-    };
-
+    let x = new Promise((resolve, reject) => {
+        p.onload = () => {
+            p.style.position = 'absolute';
+            set_piece_image(board, p, position);
+            resolve(p);
+        };
+    });
+    await x;
     place_piece_image(type, p, position);
 }
 
@@ -162,7 +165,7 @@ function place_game_piece(gs, type, position) {
     gs[prow][pfile] = type;
 }
 
-function set_board_state(gs) {
+async function set_board_state(gs) {
     for (let row = 1; row <= squares; row++) {
         for (let file = 0; file < squares; file++) {
 
@@ -182,7 +185,7 @@ function set_board_state(gs) {
                         continue;
                     }
                 }
-                place_piece(name, make_position(row, file));
+                await place_piece(name, make_position(row, file));
             }
         }
     }
@@ -201,20 +204,24 @@ function print_moves() {
     }
 }
 
+async function reset_game_tree(pgn_paste) {
+    await reload_board();
+    moves = parse_move_tree(pgn_paste.value);
+    moves.set_initial_gs(initial_gs);
+    print_moves();
+    moves.console_out();
+}
+
 function make_pgn_handler(pgn_paste) {
     return async function (event) {
-        reload_board();
-        moves = parse_move_tree(pgn_paste.value);
-        moves.set_initial_gs(initial_gs);
-        print_moves();
-        moves.console_out();
+        await reset_game_tree(pgn_paste);
     }
 }
 
 function make_clear_handler(tarea) {
     return async function (event) {
         tarea.value = "";
-        reload_board();
+        await reload_board();
     }
 }
 
@@ -675,7 +682,7 @@ function run_move(move, gs) {
     }
 }
 
-function prev_move() {
+async function prev_move() {
     var at = boardspace_at.prev;
     if (at == null) {
         console.log("No prev moves.");
@@ -705,12 +712,25 @@ function make_move() {
     boardspace_at.set_gs(gs);
 }
 
-function key_press(k) {
+async function key_press(k) {
     if (k.key == "ArrowRight") {
         make_move();
     } else if (k.key == "ArrowLeft") {
-        prev_move();
+        await prev_move();
     }
+}
+
+function make_learn_handler(pgn_paste) {
+    return async function (event) {
+        await reset_game_tree(pgn_paste);
+        if (is_rotate) {
+            make_move();
+        }
+    }
+}
+
+function stop_learn(event) {
+    console.log("stop");
 }
 
 function make_boardspace() {
@@ -769,25 +789,10 @@ function load_piece_image(type, filename) {
     piece_images[type] = p;
 }
 
-function reload_board() {
+async function reload_board() {
     clean_old_boardspace();
     make_boardspace();
     boardspace_at = null;
-
-    load_piece_image('p', 'p.png');
-    load_piece_image('P', 'P.png');
-    load_piece_image('r', 'r.png');
-    load_piece_image('R', 'R.png');
-    load_piece_image('n', 'n.png');
-    load_piece_image('N', 'N.png');
-    load_piece_image('b', 'b.png');
-    load_piece_image('B', 'B.png');
-    load_piece_image('q', 'q.png');
-    load_piece_image('Q', 'Q.png');
-    load_piece_image('k', 'k.png');
-    load_piece_image('K', 'K.png');
-    load_piece_image('bad', 'annotation_bad.png')
-    load_piece_image('good', 'annotation_good.png')
 
     var gs = make_gamespace();
 
@@ -827,10 +832,27 @@ function reload_board() {
     place_game_piece(gs, 'N', 'g1');
     place_game_piece(gs, 'R', 'h1');
 
-    set_board_state(gs);
+    await set_board_state(gs);
     if (initial_gs == null) {
         initial_gs = gs;
     }
+}
+
+function load_piece_images() {
+    load_piece_image('p', 'p.png');
+    load_piece_image('P', 'P.png');
+    load_piece_image('r', 'r.png');
+    load_piece_image('R', 'R.png');
+    load_piece_image('n', 'n.png');
+    load_piece_image('N', 'N.png');
+    load_piece_image('b', 'b.png');
+    load_piece_image('B', 'B.png');
+    load_piece_image('q', 'q.png');
+    load_piece_image('Q', 'Q.png');
+    load_piece_image('k', 'k.png');
+    load_piece_image('K', 'K.png');
+    load_piece_image('bad', 'annotation_bad.png')
+    load_piece_image('good', 'annotation_good.png')
 }
 
 (function () {
@@ -841,6 +863,8 @@ function reload_board() {
     var pgn_paste = document.getElementById('pgn_paste');
     var clear = document.getElementById('clear');
     var rotate = document.getElementById('rotate');
+    var learn = document.getElementById('learn');
+    var stop = document.getElementById('stop');
     pgn_paste.style.width = board.width;
     pgn_paste.style.height = board.width / 4;
 
@@ -848,10 +872,15 @@ function reload_board() {
     pgn_run.addEventListener('click', make_pgn_handler(pgn_paste));
     clear.addEventListener('click', make_clear_handler(pgn_paste));
     rotate.addEventListener('click', rotate_board);
+    learn.addEventListener('click', make_learn_handler(pgn_paste));
+    stop.addEventListener('click', stop_learn);
 
     document.onkeydown = key_press;
 
-    reload_board();
+    load_piece_images();
+    window.addEventListener('load', async (event) => {
+        await reload_board();
+    });
 
 })();
 

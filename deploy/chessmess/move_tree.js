@@ -56,9 +56,7 @@ class MoveTree {
         function recur_console(at) {
             console.log(at.moveno + ": " + at.color + " has " + at.moves.length + " moves.");
             for (let i = 0; i < at.moves.length; i++) {
-                console.log("(");
-                console.log("   " + at.moves[i].move);
-                console.log(")");
+                console.log("( " + at.moves[i].move + " )");
             }
             for (let i = 0; i < at.moves.length; i++) {
                 console.log(" --->  move " + i + ": " + at.moves[i].move);
