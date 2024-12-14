@@ -38,11 +38,7 @@ function make_position(row, file) {
     return charf + charr;
 }
 
-function piece_to_square(board, piece, file, row) {
-    if (is_rotate) {
-        file = 7 - file;
-        row = 7 - row;
-    }
+function piece_to_board_square(board, piece, x, y) {
     var squares = 8;
     br = board.getBoundingClientRect();
     pr = piece.getBoundingClientRect();
@@ -50,10 +46,18 @@ function piece_to_square(board, piece, file, row) {
     var sw = br.width / squares;
     var sh = br.height / squares;
 
-    var px = br.x + (file * sw + (sw / 2)) - (pr.width / 2);
-    var py = br.y + (row * sw + (sh / 2)) - (pr.height / 2);
+    var px = br.x + (x * sw + (sw / 2)) - (pr.width / 2);
+    var py = br.y + (y * sw + (sh / 2)) - (pr.height / 2);
 
     set_piece_location(piece, px, py);
+}
+
+function piece_to_square(board, piece, file, row) {
+    if (is_rotate) {
+        file = 7 - file;
+        row = 7 - row;
+    }
+    piece_to_board_square(board, piece, file, row);
 }
 
 function redraw_board() {
@@ -80,7 +84,7 @@ function center_piece(board, piece) {
     var sw = br.width / squares;
     var sh = br.height / squares;
 
-    piece_to_square(board, piece, Math.floor(board_center_x / sw), Math.floor(board_center_y / sh));
+    piece_to_board_square(board, piece, Math.floor(board_center_x / sw), Math.floor(board_center_y / sh));
 }
 
 function set_piece_image(board, piece, cpos) {
@@ -444,24 +448,46 @@ function find_bishop_pattern(type, color, trow, tfile, filerestrict, rowrestrict
     return null;
 }
 
-function find_rook_pattern(type, color, trow, tfile) {
+function matches_restrict(piece, filerestrict, rowrestrict) {
+    if (filerestrict != null) {
+        if (bfile(piece.position) != filerestrict) {
+            return false;
+        }
+    }
+    if (rowrestrict != null) {
+        if (brow(piece.position) != rowrestrict) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function find_rook_pattern(type, color, trow, tfile, filerestrict, rowrestrict) {
     var ret = null;
 
     ret = search_incr(color, type, 0, 1, trow, tfile);
     if (ret != null) {
-        return ret;
+        if (matches_restrict(ret, filerestrict, rowrestrict)) {
+            return ret;
+        }
     }
     ret = search_incr(color, type, 0, -1, trow, tfile);
     if (ret != null) {
-        return ret;
+        if (matches_restrict(ret, filerestrict, rowrestrict)) {
+            return ret;
+        }
     }
     ret = search_incr(color, type, 1, 0, trow, tfile);
     if (ret != null) {
-        return ret;
+        if (matches_restrict(ret, filerestrict, rowrestrict)) {
+            return ret;
+        }
     }
     ret = search_incr(color, type, -1, 0, trow, tfile);
     if (ret != null) {
-        return ret;
+        if (matches_restrict(ret, filerestrict, rowrestrict)) {
+            return ret;
+        }
     }
     return null;
 }
@@ -471,7 +497,7 @@ function find_bishop_src(color, trow, tfile, filerestrict, rowrestrict) {
 }
 
 function find_rook_src(color, trow, tfile, filerestrict, rowrestrict) {
-    return find_rook_pattern('R', color, trow, tfile);
+    return find_rook_pattern('R', color, trow, tfile, filerestrict, rowrestrict);
 }
 
 function find_queen_src(color, trow, tfile, filerestrict, rowrestrict) {
@@ -549,13 +575,7 @@ function find_src_type(color, type, trow, tfile, filerestrict, rowrestrict) {
     } else if (type == 'Q') {
         return find_queen_src(color, trow, tfile, filerestrict, rowrestrict);
     } else if (type == 'R') {
-        if (rowrestrict != null) {
-            return find_rook_at(color, rowrestrict, tfile);
-        } else if (filerestrict != null) {
-            return find_rook_at(color, trow, filerestrict);
-        } else {
-            return find_rook_src(color, trow, tfile, filerestrict, rowrestrict);
-        }
+        return find_rook_src(color, trow, tfile, filerestrict, rowrestrict);
     } else if (type == "K") {
         return find_king_src(color, trow, tfile);
     }
