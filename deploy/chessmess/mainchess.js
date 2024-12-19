@@ -6,6 +6,7 @@ let moves = null;
 let boardspace = null;
 let boardspace_at = null;
 let is_rotate = false;
+let is_learn = false;
 
 let initial_gs = null;
 
@@ -71,10 +72,57 @@ function redraw_board() {
     }
 }
 
-function center_piece(board, piece) {
+function x2board_file(file) {
+    if (is_rotate) {
+        file = 7 - file;
+    }
+    return file;
+}
+
+function y2board_row(row) {
+    row = row + 1;
+    if (!is_rotate) {
+        row = 8 - row;
+    }
+    return row;
+}
+
+function x2board_file_str(x) {
+    return bfile_name(x2board_file(x));
+}
+
+function y2board_row_str(y) {
+    return brow_name(y2board_row(y));
+}
+
+function incorrect_move(piece, x, y) {
+    fail_animation(piece, x, y);
+}
+
+function check_learn_move(piece, x, y) {
+    console.log(piece.position + " move to " + x2board_file_str(x) + y2board_row_str(y));
+
+    var right_move = boardspace_at.moves[0]; // could be a choice
+
+    var right_piece = null;
+    var movestr = null;
+    var take = null;
+
+    [right_piece, movestr, take] = piece_for_move(right_move);
+    console.log("compare to: " + right_piece.position + " -> " + movestr);
+
+    /* Is this the right piece */
+    if (piece != right_piece) {
+        incorrect_move(piece, x, y);
+    }
+
+    /* Did it go to the right place */
+}
+
+function drag_piece(board, piece) {
     var squares = 8;
     br = board.getBoundingClientRect();
-    pr = piece.getBoundingClientRect();
+    pr = piece.image.getBoundingClientRect();
 
     centerx = pr.left + pr.width / 2;
     centery = pr.top + pr.height / 2;
@@ -84,7 +132,14 @@ function center_piece(board, piece) {
     var sw = br.width / squares;
     var sh = br.height / squares;
 
-    piece_to_board_square(board, piece, Math.floor(board_center_x / sw), Math.floor(board_center_y / sh));
+    var x = Math.floor(board_center_x / sw);
+    var y = Math.floor(board_center_y / sh);
+
+    if (is_learn) {
+        check_learn_move(piece, x, y);
+    } else {
+        piece_to_board_square(board, piece.image, x, y);
+    }
 }
 
 function set_piece_image(board, piece, cpos) {
@@ -135,7 +190,7 @@ function place_piece_image(name, p, position) {
             document.removeEventListener('mousemove', move);
             document.removeEventListener('mouseup', stop);
 
-            center_piece(board, p);
+            drag_piece(board, piece);
         }
 
         document.addEventListener('mousemove', move);
@@ -147,6 +202,7 @@ async function place_piece(type, position) {
     var p = piece_images[type];
     p = p.cloneNode(true);
     p.style.position = 'absolute';
+
     set_piece_location(p, 0, 0);
 
     document.body.appendChild(p);
@@ -655,11 +711,10 @@ function find_attack_pawn(move) {
     return piece;
 }
 
-function run_move(move, gs) {
-    console.log("run: " + move.move);
+function piece_for_move(move) {
+    var take = false;
     var piece = null;
     var movestr = null;
-    var take = false;
 
     if (is_loc(move.move[0])) {
         if (is_takes(move.move[1])) {
@@ -694,7 +749,16 @@ function run_move(move, gs) {
         movestr = move.move;
         piece = king_at_start(move.color);
     }
+    return [piece, movestr, take];
+}
 
+function run_move(move, gs) {
+    console.log("run: " + move.move);
+    var piece = null;
+    var movestr = null;
+    var take = false;
+
+    [piece, movestr, take] = piece_for_move(move);
     if (piece != null) {
         move_piece(piece, movestr, take, gs);
     } else {
@@ -743,6 +807,7 @@ async function key_press(k) {
 function make_learn_handler(pgn_paste) {
     return async function (event) {
         await reset_game_tree(pgn_paste);
+        is_learn = true;
         if (is_rotate) {
             make_move();
         }

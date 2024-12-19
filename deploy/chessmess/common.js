@@ -39,3 +39,11 @@ function lower(a) {
     }
     return a;
 }
+
+function bfile_name(file) {
+    return String.fromCharCode(ascii('a') + file);
+}
+
+function brow_name(row) {
+    return String.fromCharCode(ascii('0') + row);
+}
