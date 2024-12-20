@@ -95,12 +95,20 @@ function y2board_row_str(y) {
     return brow_name(y2board_row(y));
 }
 
-function incorrect_move(piece, x, y) {
-    fail_animation(piece, x, y);
+async function incorrect_move(piece, x, y) {
+    await fail_animation(piece, x, y);
 }
 
-function check_learn_move(piece, x, y) {
+async function correct_move(piece, x, y) {
+    await success_animation(piece, x, y);
+}
+
+async function check_learn_move(piece, x, y) {
+    piece_to_board_square(board, piece.image, x, y);
     console.log(piece.position + " move to " + x2board_file_str(x) + y2board_row_str(y));
+
+    var bx = x2board_file(x);
+    var by = y2board_row(y);
 
     var right_move = boardspace_at.moves[0]; // could be a choice
 
@@ -113,13 +121,15 @@ function check_learn_move(piece, x, y) {
 
     /* Is this the right piece */
     if (piece != right_piece) {
-        incorrect_move(piece, x, y);
+        await incorrect_move(piece, bx, by);
+    } else {
+        await correct_move(piece, bx, by);
     }
 
     /* Did it go to the right place */
 }
 
-function drag_piece(board, piece) {
+async function drag_piece(board, piece) {
     var squares = 8;
     br = board.getBoundingClientRect();
     pr = piece.image.getBoundingClientRect();
@@ -136,7 +146,7 @@ function drag_piece(board, piece) {
     var y = Math.floor(board_center_y / sh);
 
     if (is_learn) {
-        check_learn_move(piece, x, y);
+        await check_learn_move(piece, x, y);
     } else {
         piece_to_board_square(board, piece.image, x, y);
     }
@@ -185,36 +195,21 @@ function place_piece_image(name, p, position) {
             set_piece_location(p, l, t);
         }
 
-        function stop(e) {
+        async function stop(e) {
             p.isdragging = false;
             document.removeEventListener('mousemove', move);
             document.removeEventListener('mouseup', stop);
 
-            drag_piece(board, piece);
+            await drag_piece(board, piece);
         }
 
         document.addEventListener('mousemove', move);
-        document.addEventListener('mouseup', stop);
+        document.addEventListener('mouseup', async (e) => {await stop()}, false);
     });
 }
 
 async function place_piece(type, position) {
-    var p = piece_images[type];
-    p = p.cloneNode(true);
-    p.style.position = 'absolute';
-
-    set_piece_location(p, 0, 0);
-
-    document.body.appendChild(p);
-
-    let x = new Promise((resolve, reject) => {
-        p.onload = () => {
-            p.style.position = 'absolute';
-            set_piece_image(board, p, position);
-            resolve(p);
-        };
-    });
-    await x;
+    var p = await piece_to_screen(type, position);
     place_piece_image(type, p, position);
 }
 

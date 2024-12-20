@@ -1,10 +1,12 @@
-function fail_animation(piece, x, y) {
-    var p = piece_images['bad'];
+async function piece_to_screen(type, position) {
+    var p = piece_images[type];
     p = p.cloneNode(true);
     p.style.position = 'absolute';
-    set_piece_location(p, x, y);
 
-    /*
+    set_piece_location(p, 0, 0);
+
+    document.body.appendChild(p);
+
     let x = new Promise((resolve, reject) => {
         p.onload = () => {
             p.style.position = 'absolute';
@@ -13,6 +15,16 @@ function fail_animation(piece, x, y) {
         };
     });
     await x;
-    place_piece_image(type, p, position);
-    */
+    return p;
+}
+async function fail_animation(piece, x, y) {
+    var p = await piece_to_screen('bad', make_position(y, x));
+    await new Promise(r => setTimeout(r, 2000));
+    p.parentElement.removeChild(p);
+}
+
+async function success_animation(piece, x, y) {
+    var p = await piece_to_screen('good', make_position(y, x));
+    await new Promise(r => setTimeout(r, 300));
+    p.parentElement.removeChild(p);
 }
