@@ -122,6 +122,9 @@ async function check_learn_move(piece, x, y) {
     /* Is this the right piece */
     if (piece != right_piece) {
         await incorrect_move(piece, bx, by);
+        var prow = img_row(piece.position);
+        var pfile = img_file(piece.position);
+        piece_to_square(board, piece.image, pfile, prow);
     } else {
         await correct_move(piece, bx, by);
     }
@@ -196,6 +199,8 @@ function place_piece_image(name, p, position) {
         }
 
         async function stop(e) {
+            e.stopPropagation();
+            e.preventDefault();
             p.isdragging = false;
             document.removeEventListener('mousemove', move);
             document.removeEventListener('mouseup', stop);
@@ -204,7 +209,7 @@ function place_piece_image(name, p, position) {
         }
 
         document.addEventListener('mousemove', move);
-        document.addEventListener('mouseup', async (e) => {await stop()}, false);
+        document.addEventListener('mouseup', stop);
     });
 }
 
