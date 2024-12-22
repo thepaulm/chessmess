@@ -164,6 +164,10 @@ function parse_move_tree(text) {
         if (move == "..") {
             continue;
         }
+        /* Handle dumb star */
+        if (move == "*") {
+            continue;
+        }
 
         at = at.add_move(moveno, move);
         at.set_moveno(moveno);
