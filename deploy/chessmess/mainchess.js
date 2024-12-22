@@ -7,6 +7,7 @@ let boardspace = null;
 let boardspace_at = null;
 let is_rotate = false;
 let is_learn = false;
+let user_text = null;
 
 let initial_gs = null;
 
@@ -37,6 +38,10 @@ function make_position(row, file) {
     let charf = lower2alpha(file);
     let charr = num2alpha(row);
     return charf + charr;
+}
+
+function tell(s) {
+    user_text.value = s;
 }
 
 function piece_to_board_square(board, piece, x, y) {
@@ -111,9 +116,10 @@ async function check_learn_move(piece, x, y) {
     var by = y2board_row(y);
 
     if (boardspace_at.moves.length == 0) {
-        console.log("END OF THE GAME.");
+        tell("END OF THE GAME.");
         return;
     }
+
     var right_move = boardspace_at.moves[0]; // could be a choice
 
     var right_piece = null;
@@ -146,9 +152,12 @@ async function check_learn_move(piece, x, y) {
 
         make_move(); // officially do my move
         make_move(); // lets do the next one ...
-    }
 
-    /* Did it go to the right place */
+        if (boardspace_at.moves.length == 0) {
+            tell("END OF THE GAME.");
+            return;
+        }
+    }
 }
 
 async function drag_piece(board, piece) {
@@ -167,7 +176,10 @@ async function drag_piece(board, piece) {
     var x = Math.floor(board_center_x / sw);
     var y = Math.floor(board_center_y / sh);
 
-    if (is_learn) {
+    /* They didn't actually move it anywhere, just set it back down */
+    if (x2board_file(x) == bfile(piece.position) && y2board_row(y) == brow(piece.position)) {
+        piece_to_board_square(board, piece.image, x, y);
+    } else if (is_learn) {
         await check_learn_move(piece, x, y);
     } else {
         piece_to_board_square(board, piece.image, x, y);
@@ -830,6 +842,7 @@ async function key_press(k) {
 
 function make_learn_handler(pgn_paste) {
     return async function (event) {
+        tell("Learning ...");
         await reset_game_tree(pgn_paste);
         is_learn = true;
         if (is_rotate) {
@@ -970,12 +983,14 @@ function load_piece_images() {
         e.preventDefault();
     });
     var pgn_paste = document.getElementById('pgn_paste');
+    user_text = document.getElementById('user_text');
     var clear = document.getElementById('clear');
     var rotate = document.getElementById('rotate');
     var learn = document.getElementById('learn');
     var stop = document.getElementById('stop');
     pgn_paste.style.width = board.width;
     pgn_paste.style.height = board.width / 4;
+    user_text.style.width = board.width;
 
     var pgn_run = document.getElementById('pgn_run');
     pgn_run.addEventListener('click', make_pgn_handler(pgn_paste));
