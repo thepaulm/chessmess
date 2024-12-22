@@ -127,6 +127,9 @@ async function check_learn_move(piece, x, y) {
         piece_to_square(board, piece.image, pfile, prow);
     } else {
         await correct_move(piece, bx, by);
+
+        make_move(); // officially do my move
+        make_move(); // lets do the next one ...
     }
 
     /* Did it go to the right place */
