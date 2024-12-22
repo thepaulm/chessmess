@@ -110,6 +110,10 @@ async function check_learn_move(piece, x, y) {
     var bx = x2board_file(x);
     var by = y2board_row(y);
 
+    if (boardspace_at.moves.length == 0) {
+        console.log("END OF THE GAME.");
+        return;
+    }
     var right_move = boardspace_at.moves[0]; // could be a choice
 
     var right_piece = null;
@@ -791,7 +795,12 @@ function make_move() {
         console.log("end of the game buddy");
         return;
     }
-    var move = boardspace_at.moves[0]; // could be a choice here
+
+    var index = random_range(0, boardspace_at.moves.length);
+    if (boardspace_at.moves.length > 0) {
+        console.log("I have a choice of " + boardspace_at.moves.length + " moves here.");
+    }
+    var move = boardspace_at.moves[index]; // could be a choice here
     console.log("[ " + boardspace_at.moves.length + " ] move no: " + boardspace_at.moveno + " is " + move.move);
     var gs = copy_gamespace(boardspace_at.gs);
     run_move(move, gs);
