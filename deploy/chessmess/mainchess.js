@@ -123,8 +123,20 @@ async function check_learn_move(piece, x, y) {
     [right_piece, movestr, take] = piece_for_move(right_move);
     console.log("compare to: " + right_piece.position + " -> " + movestr);
 
+    var movey = brow(movestr);
+    var movex = bfile(movestr);
+    if (piece == right_piece) {
+        if (movestr == 'O-O') {
+            movey = brow(right_piece.position);
+            movex = 6;
+        } else if (movestr == 'O-O-O') {
+            movey = brow(right_piece.position);
+            movex = 2;
+        }
+    }
+
     /* Is this the right piece */
-    if (piece != right_piece || brow(movestr) != by || bfile(movestr) != bx) {
+    if (piece != right_piece || movey != by || movex != bx) {
         await incorrect_move(piece, bx, by);
         var prow = img_row(piece.position);
         var pfile = img_file(piece.position);
