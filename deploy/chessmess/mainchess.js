@@ -120,7 +120,7 @@ async function check_learn_move(piece, x, y) {
     console.log("compare to: " + right_piece.position + " -> " + movestr);
 
     /* Is this the right piece */
-    if (piece != right_piece) {
+    if (piece != right_piece || brow(movestr) != by || bfile(movestr) != bx) {
         await incorrect_move(piece, bx, by);
         var prow = img_row(piece.position);
         var pfile = img_file(piece.position);
