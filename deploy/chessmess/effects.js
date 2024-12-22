@@ -28,3 +28,18 @@ async function success_animation(piece, x, y) {
     await new Promise(r => setTimeout(r, 300));
     p.parentElement.removeChild(p);
 }
+
+async function game_over_audio() {
+    var a = audio_styles['game_over'];
+    await a.play();
+}
+
+async function move_audio() {
+    var a = audio_styles['move'];
+    await a.play();
+}
+
+async function bad_move_audio() {
+    var a = audio_styles['bad_move'];
+    await a.play();
+}

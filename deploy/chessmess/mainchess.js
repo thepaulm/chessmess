@@ -12,6 +12,7 @@ let user_text = null;
 let initial_gs = null;
 
 let piece_images = new Map();
+let audio_styles = new Map();
 
 function img_row(cpos) {
     return 8 - Number(cpos[1]);
@@ -117,6 +118,7 @@ async function check_learn_move(piece, x, y) {
 
     if (boardspace_at.moves.length == 0) {
         tell("END OF THE GAME.");
+        await game_over_audio();
         return;
     }
 
@@ -143,18 +145,22 @@ async function check_learn_move(piece, x, y) {
 
     /* Is this the right piece */
     if (piece != right_piece || movey != by || movex != bx) {
+        await bad_move_audio();
         await incorrect_move(piece, bx, by);
         var prow = img_row(piece.position);
         var pfile = img_file(piece.position);
         piece_to_square(board, piece.image, pfile, prow);
     } else {
+        await move_audio();
         await correct_move(piece, bx, by);
-
         make_move(); // officially do my move
+
+        await move_audio();
         make_move(); // lets do the next one ...
 
         if (boardspace_at.moves.length == 0) {
             tell("END OF THE GAME.");
+            await game_over_audio();
             return;
         }
     }
@@ -847,6 +853,7 @@ function make_learn_handler(pgn_paste) {
         is_learn = true;
         if (is_rotate) {
             make_move();
+            await move_audio();
         }
     }
 }
@@ -909,6 +916,11 @@ function load_piece_image(type, filename) {
     }
     p.src = filename;
     piece_images[type] = p;
+}
+
+function load_audio_style(type, filename) {
+    var a = new Audio(filename);
+    audio_styles[type] = a;
 }
 
 async function reload_board() {
@@ -977,6 +989,12 @@ function load_piece_images() {
     load_piece_image('good', 'annotation_good.png')
 }
 
+function load_audio_styles() {
+    load_audio_style("game_over", "mixkit-completion-of-a-level-2063.wav");
+    load_audio_style("move", "MovePiece.mp3");
+    load_audio_style("bad_move", "mixkit-interface-option-select-2573.wav");
+}
+
 (function () {
     board = document.getElementById('board')
     board.addEventListener('dragstart', (e) => {
@@ -1002,6 +1020,7 @@ function load_piece_images() {
     document.onkeydown = key_press;
 
     load_piece_images();
+    load_audio_styles();
     window.addEventListener('load', async (event) => {
         await reload_board();
     });
