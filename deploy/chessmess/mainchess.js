@@ -86,9 +86,10 @@ function x2board_file(file) {
 }
 
 function y2board_row(row) {
-    row = row + 1;
     if (!is_rotate) {
         row = 8 - row;
+    } else {
+        row = row + 1;
     }
     return row;
 }
@@ -854,6 +855,10 @@ function make_learn_handler(pgn_paste) {
         if (is_rotate) {
             make_move();
             await move_audio();
+        } else {
+            if (boardspace_at == null) {
+                boardspace_at = moves.top;
+            }
         }
     }
 }
