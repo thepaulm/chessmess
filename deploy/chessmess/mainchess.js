@@ -304,6 +304,7 @@ function print_moves() {
 async function reset_game_tree(pgn_paste) {
     await reload_board();
     moves = parse_move_tree(pgn_paste.value);
+    moves.linearize();
     moves.set_initial_gs(initial_gs);
     print_moves();
     moves.console_out();

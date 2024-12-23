@@ -20,6 +20,11 @@ class Move {
         }
         this.next = new MoveOptionNode(nextcolor, prev);
     }
+
+    linearize(orig_top, path, move_paths, top) {
+        var m = new Move(this.color, this.move_number, this.move, top);
+        m.linearize(orig_top.next, path, move_paths, top);
+    }
 }
 class MoveOptionNode {
     constructor(color, prev) {
@@ -28,6 +33,23 @@ class MoveOptionNode {
         this.gs = null;
         this.prev = prev;
         this.moveno = 1;
+    }
+
+    copy(prev) {
+        var ret = new MoveOptionNode(this.color, prev);
+        return ret;
+    }
+
+    linearize(orig_top, path, move_paths, top) {
+        if (orig_top.moves.length == 0) {
+            move_paths.push(path);
+        }
+        for (let i = 0; i < orig_top.moves.length; i++) {
+            var option;
+            var new_top;
+            {option, new_top} = path.copy_path(path, top);
+            orig_top.moves[i].linearize(orig_top, option, move_paths, new_top);
+        }
     }
 
     set_moveno(moveno) {
@@ -48,9 +70,15 @@ class MoveOptionNode {
 class MoveTree {
     constructor() {
         this.top = new MoveOptionNode("white", null);
+        this.move_paths = null;
     }
     set_initial_gs(gs) {
         this.top.gs = gs;
+    }
+    linearize() {
+        this.move_paths = new Array();
+        var path = this.top.copy(null);
+        this.top.linearize(this.top, path, this.move_paths, path);
     }
     console_out() {
         function recur_console(at) {
