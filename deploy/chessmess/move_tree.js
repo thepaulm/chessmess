@@ -20,6 +20,30 @@ class Move {
         }
         this.next = new MoveOptionNode(nextcolor, prev);
     }
+    copy(prev) {
+        var me = new Move(this.color, this.move_number, this.move, prev);
+        return me;
+    }
+    walk(paths) {
+        if (this.next.moves.length == 0) {
+            var pcopy = this.next.prev.copy();
+            var mecopy = this.copy(pcopy);
+            if (pcopy.moves.length != 0) {
+                console.log("ALso how?");
+            }
+            pcopy.moves.push(mecopy);
+
+            /* get to copy of the root and add to the list */
+            var at = this.next;
+            while (at.prev != null) {
+                at = at.prev;
+            }
+            paths.push(at);
+
+        } else {
+            this.next.walk(paths);
+        }
+    }
 }
 class MoveOptionNode {
     constructor(color, prev) {
@@ -43,14 +67,59 @@ class MoveOptionNode {
         var pushno = this.moves.push(nextm);
         return nextm.next;
     }
+
+    walk(paths) {
+        for (let i = 0; i < this.moves.length; i++) {
+            this.moves[i].walk(paths);
+        }
+    }
+
+    copy() {
+        if (this.prev == null) {
+            var me = new MoveOptionNode(this.color, null);
+            me.gs = this.gs;
+            return me;
+        }
+        // in order to make a copy of myself, I need a copy of my parent. In order to copy my parent I need to
+        // know which move of my parent got me here.
+        var pcopy = this.prev.copy();
+        var me = new MoveOptionNode(this.color, pcopy);
+        me.moveno = this.moveno;
+
+        for (let i = 0; i < this.prev.moves.length; i++) {
+            if (this.prev.moves[i] == this) {
+                if (pcopy.moves.length != 0) {
+                    console.log("HOw?");
+                }
+                pcopy.moves.push(this.prev.moves[i].copy(pcopy));
+                pcopy.moves[0].next = me;
+                break;
+            }
+        }
+        return me;
+    }
 }
 
 class MoveTree {
     constructor() {
         this.top = new MoveOptionNode("white", null);
+        this.paths = null;
     }
     set_initial_gs(gs) {
         this.top.gs = gs;
+    }
+    linearize() {
+        this.paths = new Array();
+        this.top.walk(this.paths);
+    }
+    random_start() {
+        if (this.paths == null || this.paths.length == 0) {
+            console.log("Asked to start but no paths.");
+            return;
+        }
+        var which = random_range(0, this.paths.length);
+        console.log("I have a choice of " + this.paths.length + " options, I am choosing number " + which);
+        return this.paths[which];
     }
     console_out() {
         function recur_console(at) {

@@ -130,7 +130,6 @@ async function check_learn_move(piece, x, y) {
     var take = null;
 
     [right_piece, movestr, take] = piece_for_move(right_move);
-    console.log("compare to: " + right_piece.position + " -> " + movestr);
 
     var movey = brow(movestr);
     var movex = bfile(movestr);
@@ -289,25 +288,10 @@ async function set_board_state(gs) {
     }
 }
 
-function print_moves() {
-    var at = moves.top;
-
-    for (;;) {
-        if (at.moves.length == 0) {
-            return;
-        }
-        var move = at.moves[0];
-        console.log(move.move_number + " " + move.color + ": " + move.move);
-        at = move.next;
-    }
-}
-
 async function reset_game_tree(pgn_paste) {
     await reload_board();
     moves = parse_move_tree(pgn_paste.value);
     moves.set_initial_gs(initial_gs);
-    print_moves();
-    moves.console_out();
 }
 
 function make_pgn_handler(pgn_paste) {
@@ -820,6 +804,7 @@ function make_move() {
         return;
     }
     if (boardspace_at == null) {
+        console.log("move location not set, starting at very top.");
         boardspace_at = moves.top;
     }
     if (boardspace_at.moves.length == 0) {
@@ -828,11 +813,10 @@ function make_move() {
     }
 
     var index = random_range(0, boardspace_at.moves.length);
-    if (boardspace_at.moves.length > 0) {
-        console.log("I have a choice of " + boardspace_at.moves.length + " moves here.");
+    if (boardspace_at.moves.length > 1) {
+        console.log("Move choices " + boardspace_at.moves.length + " - not in learn?");
     }
-    var move = boardspace_at.moves[index]; // could be a choice here
-    console.log("[ " + boardspace_at.moves.length + " ] move no: " + boardspace_at.moveno + " is " + move.move);
+    var move = boardspace_at.moves[index];
     var gs = copy_gamespace(boardspace_at.gs);
     run_move(move, gs);
     boardspace_at = move.next;
@@ -850,15 +834,19 @@ async function key_press(k) {
 function make_learn_handler(pgn_paste) {
     return async function (event) {
         tell("Learning ...");
-        await reset_game_tree(pgn_paste);
         is_learn = true;
+
+        /* Reset the board and reparse the pgn */
+        await reset_game_tree(pgn_paste);
+
+        moves.linearize();
+
+        /* Randomize start */
+        boardspace_at = moves.random_start();
+
         if (is_rotate) {
             make_move();
             await move_audio();
-        } else {
-            if (boardspace_at == null) {
-                boardspace_at = moves.top;
-            }
         }
     }
 }
