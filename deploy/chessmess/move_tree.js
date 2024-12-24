@@ -28,16 +28,14 @@ class Move {
         if (this.next.moves.length == 0) {
             var pcopy = this.next.prev.copy();
             var mecopy = this.copy(pcopy);
-            if (pcopy.moves.length != 0) {
-                console.log("ALso how?");
-            }
             pcopy.moves.push(mecopy);
 
             /* get to copy of the root and add to the list */
-            var at = this.next;
+            var at = pcopy;
             while (at.prev != null) {
                 at = at.prev;
             }
+            at.validate();
             paths.push(at);
 
         } else {
@@ -87,16 +85,23 @@ class MoveOptionNode {
         me.moveno = this.moveno;
 
         for (let i = 0; i < this.prev.moves.length; i++) {
-            if (this.prev.moves[i] == this) {
-                if (pcopy.moves.length != 0) {
-                    console.log("HOw?");
-                }
+            if (this.prev.moves[i].next == this) {
                 pcopy.moves.push(this.prev.moves[i].copy(pcopy));
                 pcopy.moves[0].next = me;
                 break;
             }
         }
         return me;
+    }
+    validate() {
+        if (this.moves.length > 1) {
+            console.log("VALIDATE FAIL.");
+        }
+        for (let i = 0; i < this.moves.length; i++) {
+            if (this.moves[i].next != null) {
+                this.moves[i].next.validate();
+            }
+        }
     }
 }
 
@@ -111,6 +116,9 @@ class MoveTree {
     linearize() {
         this.paths = new Array();
         this.top.walk(this.paths);
+        for (let i = 0; i < this.paths.length; i++) {
+            this.paths[i].validate();
+        }
     }
     random_start() {
         if (this.paths == null || this.paths.length == 0) {
