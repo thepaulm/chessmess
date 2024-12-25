@@ -1019,8 +1019,6 @@ function load_audio_styles() {
     pgn_paste.style.height = board.width / 4;
     user_text.style.width = board.width;
 
-    var pgn_run = document.getElementById('pgn_run');
-    pgn_run.addEventListener('click', make_pgn_handler(pgn_paste));
     clear.addEventListener('click', make_clear_handler(pgn_paste));
     rotate.addEventListener('click', rotate_board);
     learn.addEventListener('click', make_learn_handler(pgn_paste));
