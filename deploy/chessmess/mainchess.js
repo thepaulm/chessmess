@@ -216,22 +216,27 @@ class Piece {
     }
 }
 
-function place_piece_image(name, p, position) {
-    var piece = new Piece(name, p, position);
-    var prow = brow(position);
-    var pfile = bfile(position);
-    boardspace[prow][pfile] = piece;
-
-    p.isdragging = false;
-    p.addEventListener('mousedown', (e) => {
+function make_press_handler(piece) {
+    return async function onpress(e) {
+        var p = piece.image;
         e.stopPropagation();
         e.preventDefault();
         p.isdragging = true;
         function move(e) {
             if (!p.isdragging) return;
 
-            var l = e.clientX - p.width / 2;
-            var t = e.clientY - p.height / 2;
+            var cx;
+            var cy;
+
+            if (typeof e.clientX !== 'undefined') {
+                cx = e.clientX;
+                cy = e.clientY;
+            } else {
+                cx = e.touches[0].clientX;
+                cy = e.touches[0].clientY;
+            }
+            var l = cx - p.width / 2;
+            var t = cy - p.height / 2;
             set_piece_location(p, l, t);
         }
 
@@ -240,14 +245,29 @@ function place_piece_image(name, p, position) {
             e.preventDefault();
             p.isdragging = false;
             document.removeEventListener('mousemove', move);
+            document.removeEventListener('touchmove', move);
             document.removeEventListener('mouseup', stop);
+            document.removeEventListener('touchend', stop);
 
             await drag_piece(board, piece);
         }
 
         document.addEventListener('mousemove', move);
+        document.addEventListener('touchmove', move);
         document.addEventListener('mouseup', stop);
-    });
+        document.addEventListener('touchend', stop);
+    }
+}
+
+function place_piece_image(name, p, position) {
+    var piece = new Piece(name, p, position);
+    var prow = brow(position);
+    var pfile = bfile(position);
+    boardspace[prow][pfile] = piece;
+
+    p.isdragging = false;
+    p.addEventListener('mousedown', make_press_handler(piece));
+    p.addEventListener('touchstart', make_press_handler(piece));
 }
 
 async function place_piece(type, position) {
