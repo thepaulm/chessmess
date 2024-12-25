@@ -53,8 +53,8 @@ function piece_to_board_square(board, piece, x, y) {
     var sw = br.width / squares;
     var sh = br.height / squares;
 
-    var px = br.x + (x * sw + (sw / 2)) - (pr.width / 2);
-    var py = br.y + (y * sw + (sh / 2)) - (pr.height / 2);
+    var px = br.x + window.scrollX + (x * sw + (sw / 2)) - (pr.width / 2);
+    var py = br.y + window.scrollY + (y * sw + (sh / 2)) - (pr.height / 2);
 
     set_piece_location(piece, px, py);
 }
