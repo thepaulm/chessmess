@@ -235,6 +235,8 @@ function make_press_handler(piece) {
                 cx = e.touches[0].clientX;
                 cy = e.touches[0].clientY;
             }
+            cx = cx + window.scrollX;
+            cy = cy + window.scrollY;
             var l = cx - p.width / 2;
             var t = cy - p.height / 2;
             set_piece_location(p, l, t);
