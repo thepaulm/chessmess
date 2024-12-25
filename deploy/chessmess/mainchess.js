@@ -871,10 +871,6 @@ function make_learn_handler(pgn_paste) {
     }
 }
 
-function stop_learn(event) {
-    console.log("stop");
-}
-
 function make_boardspace() {
     boardspace = new Array(squares);
     /* adding 1 to the rows so we can index 1-8 like the moves are called */
@@ -1028,7 +1024,6 @@ function load_audio_styles() {
     clear.addEventListener('click', make_clear_handler(pgn_paste));
     rotate.addEventListener('click', rotate_board);
     learn.addEventListener('click', make_learn_handler(pgn_paste));
-    stop.addEventListener('click', stop_learn);
 
     document.onkeydown = key_press;
 
