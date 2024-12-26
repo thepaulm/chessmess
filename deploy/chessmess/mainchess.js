@@ -145,18 +145,21 @@ async function check_learn_move(piece, x, y) {
 
     /* Is this the right piece */
     if (piece != right_piece || movey != by || movex != bx) {
-        await bad_move_audio();
-        await incorrect_move(piece, bx, by);
+        var a = bad_move_audio();
+        var b = incorrect_move(piece, bx, by);
         var prow = img_row(piece.position);
         var pfile = img_file(piece.position);
         piece_to_square(board, piece.image, pfile, prow);
+        await Promise.all([a, b]);
     } else {
-        await move_audio();
-        await correct_move(piece, bx, by);
+        var a = move_audio();
+        var b = correct_move(piece, bx, by);
         make_move(); // officially do my move
+        await Promise.all([a, b]);
 
-        await move_audio();
+        a = move_audio();
         make_move(); // lets do the next one ...
+        await a;
 
         if (boardspace_at.moves.length == 0) {
             tell("END OF THE GAME.");
@@ -867,8 +870,9 @@ function make_learn_handler(pgn_paste) {
         boardspace_at = moves.random_start();
 
         if (is_rotate) {
+            var a = move_audio();
             make_move();
-            await move_audio();
+            await a;
         }
     }
 }
