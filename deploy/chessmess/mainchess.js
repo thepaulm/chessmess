@@ -1010,6 +1010,10 @@ function load_audio_styles() {
     load_audio_style("bad_move", "mixkit-interface-option-select-2573.wav");
 }
 
+async function feedback_button() {
+    var w = open('feedback.html', '_blank', 'popup,width=600,height=400');
+}
+
 (function () {
     board = document.getElementById('board')
     board.addEventListener('dragstart', (e) => {
@@ -1021,6 +1025,7 @@ function load_audio_styles() {
     var rotate = document.getElementById('rotate');
     var learn = document.getElementById('learn');
     var stop = document.getElementById('stop');
+    var feedback = document.getElementById('feedback');
     pgn_paste.style.width = board.width;
     pgn_paste.style.height = board.width / 4;
     user_text.style.width = board.width;
@@ -1028,6 +1033,7 @@ function load_audio_styles() {
     clear.addEventListener('click', make_clear_handler(pgn_paste));
     rotate.addEventListener('click', rotate_board);
     learn.addEventListener('click', make_learn_handler(pgn_paste));
+    feedback.addEventListener('click', feedback_button);
 
     document.onkeydown = key_press;
 
