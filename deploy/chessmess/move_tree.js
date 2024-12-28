@@ -52,6 +52,24 @@ class MoveOptionNode {
         this.moveno = 1;
     }
 
+    string() {
+        var str = "";
+        var at = this;
+
+        if (at.color == "white") {
+            str += at.moveno + ".";
+            str += " " + at.moves[0].move;
+        }
+        while (at.moves[0].next.moves.length > 0) {
+            at = at.moves[0].next;
+            if (at.color == "white") {
+                str += " " + at.moveno + ".";
+            }
+            str += " " + at.moves[0].move;
+        }
+        return str;
+    }
+
     set_moveno(moveno) {
         this.moveno = moveno;
     }
@@ -59,6 +77,7 @@ class MoveOptionNode {
     set_gs(gs) {
         this.gs = gs;
     }
+
 
     add_move(move_number, move) {
         var nextm = new Move(this.color, move_number, move, this);
@@ -118,6 +137,8 @@ class MoveTree {
         this.top.walk(this.paths);
         for (let i = 0; i < this.paths.length; i++) {
             this.paths[i].validate();
+            var pathstr = this.paths[i].string();
+            console.log("PATH: " + pathstr);
         }
     }
     random_start() {
@@ -152,6 +173,7 @@ function parse_move_tree(text) {
     var moveno = 1;
     var handle_alt = false;
     var branch_stack = new Array();
+    var branch_black = null;
 
     for (;;) {
         /* Skip leading whitespace */
@@ -218,6 +240,7 @@ function parse_move_tree(text) {
                     at = at.prev;
                 }
                 while (at.prev != null && at.prev.moveno == moveno) {
+                    branch_black = at;
                     at = at.prev;
                 }
                 handle_alt = false;
@@ -239,6 +262,7 @@ function parse_move_tree(text) {
 
         /* Handle redundant place */
         if (move == "..") {
+            at = branch_black;
             continue;
         }
         /* Handle dumb star */
