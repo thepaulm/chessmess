@@ -138,7 +138,7 @@ class MoveTree {
         for (let i = 0; i < this.paths.length; i++) {
             this.paths[i].validate();
             var pathstr = this.paths[i].string();
-            console.log("PATH: " + pathstr);
+            console.log("PATH [" + i + "]: " + pathstr);
         }
     }
     random_start() {
@@ -240,7 +240,7 @@ function parse_move_tree(text) {
                     at = at.prev;
                 }
                 while (at.prev != null && at.prev.moveno == moveno) {
-                    branch_black = at;
+                    branch_black = at; // remember where we came from in case first move is ..
                     at = at.prev;
                 }
                 handle_alt = false;
@@ -262,15 +262,23 @@ function parse_move_tree(text) {
 
         /* Handle redundant place */
         if (move == "..") {
-            at = branch_black;
+            /* if we just set branch_black because we started a new indent, then use that */
+            if (branch_black != null) {
+                at = branch_black;
+            }
+            /* otherwise we are switching to black from popping an indent, so the popped at should be correct */
             continue;
         }
+        branch_black = null;
         /* Handle dumb star */
         if (move == "*") {
             continue;
         }
 
         at = at.add_move(moveno, move);
+        if (at.prev != null && moveno < at.prev.moveno) {
+            console.log("MESSED UP MOVE ORDER: " + at.prev.moveno + " vs " + moveno);
+        }
         at.set_moveno(moveno);
 
         /* Stop parsing at checkmate */
