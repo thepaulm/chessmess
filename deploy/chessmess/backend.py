@@ -53,12 +53,15 @@ def make_user_dir(user_id):
 def ensure_user_dir(user_dir):
     return os.path.isdir(user_dir)
 
+def decode_hex_filename(filename):
+    return bytes.fromhex(filename).decode('utf-8')
+
 def get_pgn_listing(user_id):
     dirname = user_dir_name(user_id)
-    return [f for f in os.listdir(dirname) if os.path.isfile(os.path.join(dirname, f))]
+    return [decode_hex_filename(f) for f in os.listdir(dirname) if os.path.isfile(os.path.join(dirname, f))]
 
 def filesystem_name(name):
-    return name
+    return name.encode('utf-8').hex()
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
