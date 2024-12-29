@@ -332,9 +332,10 @@ function make_clear_handler(tarea) {
     }
 }
 
-function load_new_pgn(text) {
+async function load_new_pgn(text) {
     var pgn_paste = document.getElementById('pgn_paste');
     pgn_paste.value = text;
+    await reload_board();
 }
 
 async function rotate_board(event) {
@@ -1030,6 +1031,7 @@ async function feedback_button() {
     var rotate = document.getElementById('rotate');
     var learn = document.getElementById('learn');
     var feedback = document.getElementById('feedback');
+    var upload = document.getElementById('uploadForm');
     pgn_paste.style.width = board.width;
     pgn_paste.style.height = board.width / 4;
     user_text.style.width = board.width;
@@ -1038,6 +1040,7 @@ async function feedback_button() {
     rotate.addEventListener('click', rotate_board);
     learn.addEventListener('click', make_learn_handler(pgn_paste));
     feedback.addEventListener('click', feedback_button);
+    upload.addEventListener('submit', upload_pgn);
 
     document.onkeydown = key_press;
 

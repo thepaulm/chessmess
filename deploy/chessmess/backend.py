@@ -5,6 +5,7 @@ import json
 import argparse
 import os
 import sys
+import base64
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
@@ -65,7 +66,52 @@ def filesystem_name(name):
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        if self.path == "/user-pgn":
+        if self.path == "/upload-pgn":
+            auth_header = self.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith("Bearer "):
+                self.send_response(401)
+            else:
+                token = auth_header.split(" ")[1]
+                result = verify_google_token(token)
+                if result['success']:
+                    content_length = int(self.headers['Content-Length'])  # Get the size of the data
+                    post_data = self.rfile.read(content_length)  # Read the POST data
+
+                    try:
+                        # Parse the JSON payload
+                        payload = json.loads(post_data)
+                        filename = filesystem_name(payload.get('filename'))
+                        content_base64 = payload.get('content')
+
+                        if not filename or not content_base64:
+                            raise ValueError("Invalid payload: 'filename' or 'content' missing.")
+
+                        # Decode the Base64 content
+                        file_content = base64.b64decode(content_base64)
+
+                        # Save the file to the uploads folder
+                        file_path = os.path.join(user_dir_name(result['user_id']), filename)
+                        with open(file_path, 'wb') as file:
+                            file.write(file_content)
+
+                        # Respond with a success message
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({"message": "File uploaded successfully!"}).encode('utf-8'))
+
+                    except Exception as e:
+                        # Handle errors and respond with an error message
+                        self.send_response(400)
+                        self.send_header('Content-Type', 'application/json')
+                        self.end_headers()
+                        print(f"Some kind of error: {e}")
+                        error_message = {"error": str(e)}
+                        self.wfile.write(json.dumps(error_message).encode('utf-8'))
+                else:
+                    self.send_response(401)
+
+        elif self.path == "/user-pgn":
             auth_header = self.headers.get('Authorization')
             if not auth_header or not auth_header.startswith("Bearer "):
                 self.send_response(401)
