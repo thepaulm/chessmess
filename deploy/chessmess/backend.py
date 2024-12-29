@@ -57,9 +57,40 @@ def get_pgn_listing(user_id):
     dirname = user_dir_name(user_id)
     return [f for f in os.listdir(dirname) if os.path.isfile(os.path.join(dirname, f))]
 
+def filesystem_name(name):
+    return name
+
 class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        if self.path == "/verify-token":
+        if self.path == "/user-pgn":
+            auth_header = self.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith("Bearer "):
+                self.send_response(401)
+            else:
+                token = auth_header.split(" ")[1]
+                result = verify_google_token(token)
+                if result['success']:
+                    # Read and parse the request body
+                    content_length = int(self.headers['Content-Length'])
+                    post_data = self.rfile.read(content_length)
+                    data = json.loads(post_data)
+                    filedata = None
+                    filename = filesystem_name(data['pgn_name'])
+                    try:
+                        with open(os.path.join(user_dir_name(result['user_id']), filename)) as file:
+                            filedata = file.read()
+                    except FileNotFoundError:
+                        pass
+                    except IOError as e:
+                        print(f"PGN Read error: {e}")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"pgn_data": filedata}).encode("utf-8"))
+                else:
+                    self.send_response(401)
+
+        elif self.path == "/verify-token":
             # Read and parse the request body
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)

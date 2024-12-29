@@ -332,6 +332,11 @@ function make_clear_handler(tarea) {
     }
 }
 
+function load_new_pgn(text) {
+    var pgn_paste = document.getElementById('pgn_paste');
+    pgn_paste.value = text;
+}
+
 async function rotate_board(event) {
     if (is_rotate) {
         board.style.transform = "";
@@ -1024,7 +1029,6 @@ async function feedback_button() {
     var clear = document.getElementById('clear');
     var rotate = document.getElementById('rotate');
     var learn = document.getElementById('learn');
-    var stop = document.getElementById('stop');
     var feedback = document.getElementById('feedback');
     pgn_paste.style.width = board.width;
     pgn_paste.style.height = board.width / 4;
