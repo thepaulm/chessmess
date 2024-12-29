@@ -1,19 +1,24 @@
 <html>
-    <head><title>PGN Train - Train On Your PGNs</title></head>
+    <head>
+		<title>PGN Train - Train On Your PGNs</title>
+		<style type="text/css">
+			.no-bullets, .no-bullets li {
+				list-style-type:none;
+			}
+		</style>
+	</head>
     <body>
-		<script src="https://accounts.google.com/gsi/client" async defer></script>
-		<script src="auth.js" async defer></script>
-		<div id="g_id_onload"
-			 data-client_id="1088260192283-c62v3ctm2lj1jjtlml2pkmuvl0hpjron.apps.googleusercontent.com"
-			 data-context="signin"
-			 data-ux_mode="popup"
-			 data-callback="handleCredentialResponse"
-			 data-auto_prompt="false">
-		</div>
-
-		<div class="g_id_signin" data-type="standard"></div>
-
-        <img src="board.png" id="board"> 
+		<table>
+				<tr>
+					<td><img src="board.png" id="board"></td>
+					<td>
+						<ul class="no-bullets">
+							<li>Test1</li>
+							<li>Test2</li>
+						</ul>
+					</td>
+				</tr>
+		</table>
 		<br>
 		<br>
 		<textarea id="pgn_paste"></textarea>
@@ -24,10 +29,33 @@
 		<button id="rotate" style="width:200px;height:100">Rotate</button>
 		<button id="learn" style="width:200px;height:100">Learn</button>
 		<br>
+
+        <script src="pgn_storage.js"></script>
+		<script src="https://accounts.google.com/gsi/client" async defer></script>
+		<script src="auth.js" async defer></script>
+		<div id="login-container">
+			<!-- Login button will be replaced with user's name after login -->
+			<div id="g_id_onload"
+				 data-client_id="1088260192283-c62v3ctm2lj1jjtlml2pkmuvl0hpjron.apps.googleusercontent.com"
+				 data-context="signin"
+				 data-ux_mode="popup"
+				 data-callback="handleCredentialResponse"
+				 data-auto_prompt="false">
+			</div>
+
+			<div class="g_id_signin" data-type="standard"></div>
+		</div>
+		<!-- Placeholder for user's name -->
+		<div id="user-info" style="display: none;">
+			<span id="user-name"></span>
+		</div>
+
+		<br>
+
 		<button id="feedback" style="height:50px">Send Feedback</button>
 		<script src="common.js"></script>
         <script src="effects.js"></script>
 		<script src="move_tree.js"></script>
-        <script src="mainchess.js"></script>
+        <script src="mainchess.js" defer></script>
     </body>
 </html>
