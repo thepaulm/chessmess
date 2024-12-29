@@ -9,5 +9,15 @@ async function on_user_login() {
             'Content-Type': 'application/json'
         }
     });
+    if (fresp.ok) {
+        var data = await fresp.json();
+        var pgnlist = document.getElementById("pgn_list");
+        for (let i = 0; i < data['pgns'].length; i++) {
+            var pgn = data['pgns'][i];
+            var li = document.createElement("li");
+            li.innerHTML = pgn;
+            pgnlist.appendChild(li);
+        }
+    }
 }
 
