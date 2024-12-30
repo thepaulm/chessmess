@@ -128,6 +128,9 @@ class MoveTree {
     constructor() {
         this.top = new MoveOptionNode("white", null);
         this.paths = null;
+        this.color_choices = new Array();
+        this.color_choices['white'] = 0;
+        this.color_choices['black'] = 0;
     }
     set_initial_gs(gs) {
         this.top.gs = gs;
@@ -275,6 +278,11 @@ function parse_move_tree(text) {
             continue;
         }
 
+        /* count up all choices > 0 per color */
+        let color = at.color;
+        if (at.moves.length > 0) {
+            mt.color_choices[color]++;
+        }
         at = at.add_move(moveno, move);
         if (at.prev != null && moveno < at.prev.moveno) {
             console.log("MESSED UP MOVE ORDER: " + at.prev.moveno + " vs " + moveno);
@@ -286,7 +294,7 @@ function parse_move_tree(text) {
             break;
         }
     }
-    
+
     return mt;
 }
 

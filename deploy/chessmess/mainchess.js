@@ -317,6 +317,15 @@ async function reset_game_tree(pgn_paste) {
     await reload_board();
     moves = parse_move_tree(pgn_paste.value);
     moves.set_initial_gs(initial_gs);
+    if (moves.color_choices['white'] > moves.color_choices['black']) {
+        if (!is_rotate) {
+            await rotate_board(null);
+        }
+    } else if (moves.color_choices['black'] > moves.color_choices['white']) {
+        if (is_rotate) {
+            await rotate_board(null);
+        }
+    }
 }
 
 function make_pgn_handler(pgn_paste) {
