@@ -48,7 +48,7 @@ async function upload_pgn(event) {
 
             if (response.ok) {
                 const result = await response.json();
-                document.getElementById('response').innerText = `File uploaded successfully: ${result.message}`;
+                document.getElementById('response').innerText = 'Upload Done.';
                 add_pgn_filename(file.name);
             } else {
                 throw new Error(`Error: ${response.statusText}`);
