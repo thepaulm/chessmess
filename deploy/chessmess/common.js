@@ -53,3 +53,10 @@ function bfile_name(file) {
 function brow_name(row) {
     return String.fromCharCode(ascii('0') + row);
 }
+
+function numdiff(a, b) {
+    if (a > b) {
+        return a - b;
+    }
+    return b - a;
+}

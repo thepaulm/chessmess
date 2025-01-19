@@ -458,86 +458,130 @@ function find_knight_src(color, trow, tfile, filerestrict, rowrestrict) {
     var srow = trow;
     var sfile = tfile;
 
-    srow = trow + 2;
-    if (srow <= 8) {
-        sfile = tfile + 1;
-        if (sfile < 8) {
-            if (filerestrict == null || filerestrict == sfile) {
-                var piece = boardspace[srow][sfile];
-                if (piece != null && piece.color == color && piece.type == 'N') {
-                    return piece;
+    if (rowrestrict != null) {
+        srow = rowrestrict;
+        if (numdiff(srow, trow) == 2) {
+            sfile = tfile + 1;
+            if (sfile < 8) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
+                }
+            }
+            sfile = tfile - 1;
+            if (sfile >= 0) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
+                }
+            }
+        } else {
+            sfile = tfile + 2;
+            if (sfile < 8) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
+                }
+            }
+            sfile = tfile - 2;
+            if (sfile >= 0) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
                 }
             }
         }
-        sfile = tfile - 1;
-        if (sfile >= 0) {
-            if (filerestrict == null || filerestrict == sfile) {
-                var piece = boardspace[srow][sfile];
-                if (piece != null && piece.color == color && piece.type == 'N') {
-                    return piece;
+    } else {
+
+        srow = trow + 2;
+        if (srow <= 8) {
+            sfile = tfile + 1;
+            if (sfile < 8) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
+                }
+            }
+            sfile = tfile - 1;
+            if (sfile >= 0) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
                 }
             }
         }
-    }
-    srow = trow - 2;
-    if (srow > 0) {
-        sfile = tfile + 1;
-        if (sfile < 8) {
-            if (filerestrict == null || filerestrict == sfile) {
-                var piece = boardspace[srow][sfile];
-                if (piece != null && piece.color == color && piece.type == 'N') {
-                    return piece;
+        srow = trow - 2;
+        if (srow > 0) {
+            sfile = tfile + 1;
+            if (sfile < 8) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
+                }
+            }
+            sfile = tfile - 1;
+            if (sfile >= 0) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
                 }
             }
         }
-        sfile = tfile - 1;
-        if (sfile >= 0) {
-            if (filerestrict == null || filerestrict == sfile) {
-                var piece = boardspace[srow][sfile];
-                if (piece != null && piece.color == color && piece.type == 'N') {
-                    return piece;
+        srow = trow + 1;
+        if (srow <= 8) {
+            sfile = tfile + 2;
+            if (sfile < 8) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
+                }
+            }
+            sfile = tfile - 2;
+            if (sfile >= 0) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
                 }
             }
         }
-    }
-    srow = trow + 1;
-    if (srow <= 8) {
-        sfile = tfile + 2;
-        if (sfile < 8) {
-            if (filerestrict == null || filerestrict == sfile) {
-                var piece = boardspace[srow][sfile];
-                if (piece != null && piece.color == color && piece.type == 'N') {
-                    return piece;
+        srow = trow - 1;
+        if (srow > 0) {
+            sfile = tfile + 2;
+            if (sfile < 8) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
                 }
             }
-        }
-        sfile = tfile - 2;
-        if (sfile >= 0) {
-            if (filerestrict == null || filerestrict == sfile) {
-                var piece = boardspace[srow][sfile];
-                if (piece != null && piece.color == color && piece.type == 'N') {
-                    return piece;
-                }
-            }
-        }
-    }
-    srow = trow - 1;
-    if (srow > 0) {
-        sfile = tfile + 2;
-        if (sfile < 8) {
-            if (filerestrict == null || filerestrict == sfile) {
-                var piece = boardspace[srow][sfile];
-                if (piece != null && piece.color == color && piece.type == 'N') {
-                    return piece;
-                }
-            }
-        }
-        sfile = tfile - 2;
-        if (sfile >= 0) {
-            if (filerestrict == null || filerestrict == sfile) {
-                var piece = boardspace[srow][sfile];
-                if (piece != null && piece.color == color && piece.type == 'N') {
-                    return piece;
+            sfile = tfile - 2;
+            if (sfile >= 0) {
+                if (filerestrict == null || filerestrict == sfile) {
+                    var piece = boardspace[srow][sfile];
+                    if (piece != null && piece.color == color && piece.type == 'N') {
+                        return piece;
+                    }
                 }
             }
         }
@@ -792,12 +836,28 @@ function piece_for_move(move) {
     } else if (is_piece(move.move[0])) {
         var filerestrict = null;
         var rowrestrict = null;
-        if (is_file(move.move[1]) && is_file(move.move[2])) {
-            movestr = move.move.substr(2);
-            filerestrict = ascii(move.move[1]) - ascii('a');
-        } else if (is_row(move.move[1])) {
-            movestr = move.move.substr(2);
+        if (is_file(move.move[1])) {
+            var target_start = 2;
+            if (is_takes(move.move[target_start])) {
+                take = true;
+                target_start++;
+            } else {
+                if (!is_file(move.move[target_start])) {
+                    target_start--;
+                } else {
+                    filerestrict = ascii(move.move[1]) - ascii('a');
+                }
+            }
+            movestr = move.move.substr(target_start);
+        }
+        else if (is_row(move.move[1])) {
+            var target_start = 2;
+            if (is_takes(move.move[target_start])) {
+                take = true;
+                target_start++;
+            }
             rowrestrict = ascii(move.move[1]) - ascii('0');
+            movestr = move.move.substr(target_start);
         } else if (is_takes(move.move[1])) {
             movestr = move.move.substr(2);
             take = true;
