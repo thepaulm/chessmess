@@ -841,12 +841,11 @@ function piece_for_move(move) {
             if (is_takes(move.move[target_start])) {
                 take = true;
                 target_start++;
+            }
+            if (!is_file(move.move[target_start])) {
+                target_start--;
             } else {
-                if (!is_file(move.move[target_start])) {
-                    target_start--;
-                } else {
-                    filerestrict = ascii(move.move[1]) - ascii('a');
-                }
+                filerestrict = ascii(move.move[1]) - ascii('a');
             }
             movestr = move.move.substr(target_start);
         }
