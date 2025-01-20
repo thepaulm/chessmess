@@ -1,5 +1,6 @@
 let squares = 8;
 let board = null;
+let donetext = null;
 
 /* reset on reload pgn */
 let moves = null;
@@ -110,6 +111,19 @@ async function correct_move(piece, x, y) {
     await success_animation(piece, x, y);
 }
 
+async function completed() {
+    tell("END OF THE GAME.");
+    donetext = document.createElement('span');
+    donetext.innerHTML = "DONE!";
+    donetext.style.position = 'absolute';
+    donetext.style.color = '#ff0000';
+    donetext.style.fontSize = '100';
+    donetext.style.left = Math.floor(board.width / 2) - 100;
+    donetext.style.top = Math.floor(board.height / 2) - 100;
+    document.body.appendChild(donetext);
+    await game_over_audio();
+}
+
 async function check_learn_move(piece, x, y) {
     piece_to_board_square(board, piece.image, x, y);
     console.log(piece.position + " move to " + x2board_file_str(x) + y2board_row_str(y));
@@ -118,8 +132,7 @@ async function check_learn_move(piece, x, y) {
     var by = y2board_row(y);
 
     if (boardspace_at.moves.length == 0) {
-        tell("END OF THE GAME.");
-        await game_over_audio();
+        await completed();
         return;
     }
 
@@ -162,8 +175,7 @@ async function check_learn_move(piece, x, y) {
         await a;
 
         if (boardspace_at.moves.length == 0) {
-            tell("END OF THE GAME.");
-            await game_over_audio();
+            await completed();
             return;
         }
     }
@@ -1013,6 +1025,10 @@ function load_audio_style(type, filename) {
 }
 
 async function reload_board() {
+    if (donetext != null) {
+        document.body.removeChild(donetext);
+        donetext = null;
+    }
     clean_old_boardspace();
     make_boardspace();
     boardspace_at = null;
