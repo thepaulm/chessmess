@@ -255,7 +255,7 @@ function parse_move_tree(text) {
 
         /* Handle piece move annotation */
         var move = "";
-        while (!isspace(text[i])) {
+        while (!ismoveend(text[i])) {
             move += text[i];
             i++;
             if (i >= text.length) {
@@ -295,6 +295,7 @@ function parse_move_tree(text) {
         }
     }
 
+    // mt.console_out();
     return mt;
 }
 

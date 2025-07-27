@@ -136,24 +136,33 @@ async function check_learn_move(piece, x, y) {
         return;
     }
 
-    var right_move = boardspace_at.moves[0]; // could be a choice
-
     var right_piece = null;
-    var movestr = null;
-    var take = null;
+    var index = null;
 
-    [right_piece, movestr, take] = piece_for_move(right_move);
+    for (let index = 0; index < boardspace_at.moves.length; index++) {
 
-    var movey = brow(movestr);
-    var movex = bfile(movestr);
-    if (piece == right_piece) {
-        if (movestr == 'O-O') {
-            movey = brow(right_piece.position);
-            movex = 6;
-        } else if (movestr == 'O-O-O') {
-            movey = brow(right_piece.position);
-            movex = 2;
-        }
+      // User could have a choice here
+      var right_move = boardspace_at.moves[index];
+
+      var movestr = null;
+      var take = null;
+
+      [right_piece, movestr, take] = piece_for_move(right_move);
+
+      var movey = brow(movestr);
+      var movex = bfile(movestr);
+      if (piece == right_piece) {
+          if (movestr == 'O-O') {
+              movey = brow(right_piece.position);
+              movex = 6;
+          } else if (movestr == 'O-O-O') {
+              movey = brow(right_piece.position);
+              movex = 2;
+          }
+      }
+      if (piece == right_piece && movey == by && movex == bx) {
+        break;
+      }
     }
 
     /* Is this the right piece */
@@ -167,8 +176,13 @@ async function check_learn_move(piece, x, y) {
     } else {
         var a = move_audio();
         var b = correct_move(piece, bx, by);
-        make_move(); // officially do my move
+        make_move(index); // officially do my move
         await Promise.all([a, b]);
+
+        if (boardspace_at.moves.length == 0) {
+            await completed();
+            return;
+        }
 
         a = move_audio();
         make_move(); // lets do the next one ...
@@ -909,7 +923,7 @@ async function prev_move() {
     boardspace_at = at;
 }
 
-function make_move() {
+function make_move(index = null) {
     if (moves == null) {
         console.log("Load pgn first");
         return;
@@ -923,9 +937,8 @@ function make_move() {
         return;
     }
 
-    var index = random_range(0, boardspace_at.moves.length);
-    if (boardspace_at.moves.length > 1) {
-        console.log("Move choices " + boardspace_at.moves.length + " - not in learn?");
+    if (index == null) {
+      index = random_range(0, boardspace_at.moves.length);
     }
     var move = boardspace_at.moves[index];
     var gs = copy_gamespace(boardspace_at.gs);
@@ -1078,18 +1091,18 @@ async function reload_board() {
 }
 
 function load_piece_images() {
-    load_piece_image('p', 'p.png');
-    load_piece_image('P', 'P.png');
-    load_piece_image('r', 'r.png');
-    load_piece_image('R', 'R.png');
-    load_piece_image('n', 'n.png');
-    load_piece_image('N', 'N.png');
-    load_piece_image('b', 'b.png');
-    load_piece_image('B', 'B.png');
-    load_piece_image('q', 'q.png');
-    load_piece_image('Q', 'Q.png');
-    load_piece_image('k', 'k.png');
-    load_piece_image('K', 'K.png');
+    load_piece_image('p', 'bp.png');
+    load_piece_image('P', 'wP.png');
+    load_piece_image('r', 'br.png');
+    load_piece_image('R', 'wR.png');
+    load_piece_image('n', 'bn.png');
+    load_piece_image('N', 'wN.png');
+    load_piece_image('b', 'bb.png');
+    load_piece_image('B', 'wB.png');
+    load_piece_image('q', 'bq.png');
+    load_piece_image('Q', 'wQ.png');
+    load_piece_image('k', 'bk.png');
+    load_piece_image('K', 'wK.png');
     load_piece_image('bad', 'annotation_bad.png')
     load_piece_image('good', 'annotation_good.png')
 }

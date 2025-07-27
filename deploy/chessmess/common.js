@@ -28,6 +28,13 @@ function isspace(c) {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
+function ismoveend(c) {
+    if (isspace(c) || c == '(' || c == ')') {
+        return true;
+    }
+    return false
+}
+
 function islower(a) {
     return ascii(a) >= ascii('a') && ascii(a) <= ascii('z');
 }
