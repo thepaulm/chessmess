@@ -7,6 +7,8 @@ MoveTree
 
  */
 
+var usepath = null;
+
 class Move {
     constructor(color, move_number, move, move_start, move_end, prev) {
         this.color = color;
@@ -151,7 +153,12 @@ class MoveTree {
             console.log("Asked to start but no paths.");
             return;
         }
-        var which = random_range(0, this.paths.length);
+        if (usepath == null) {
+            var which = random_range(0, this.paths.length);
+        } else {
+            which = usepath;
+        }
+
         console.log("I have a choice of " + this.paths.length + " options, I am choosing number " + which);
         return this.paths[which];
     }
