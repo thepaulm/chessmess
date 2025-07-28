@@ -8,10 +8,12 @@ MoveTree
  */
 
 class Move {
-    constructor(color, move_number, move, prev) {
+    constructor(color, move_number, move, move_start, move_end, prev) {
         this.color = color;
         this.move_number = move_number;
         this.move = move;
+        this.move_start = move_start;
+        this.move_end = move_end;
         var nextcolor;
         if (color == "white") {
             nextcolor = "black";
@@ -21,7 +23,7 @@ class Move {
         this.next = new MoveOptionNode(nextcolor, prev);
     }
     copy(prev) {
-        var me = new Move(this.color, this.move_number, this.move, prev);
+        var me = new Move(this.color, this.move_number, this.move, this.move_start, this.move_end, prev);
         return me;
     }
     walk(paths) {
@@ -79,8 +81,8 @@ class MoveOptionNode {
     }
 
 
-    add_move(move_number, move) {
-        var nextm = new Move(this.color, move_number, move, this);
+    add_move(move_number, move, move_start, move_end) {
+        var nextm = new Move(this.color, move_number, move, move_start, move_end, this);
         var pushno = this.moves.push(nextm);
         return nextm.next;
     }
@@ -255,6 +257,7 @@ function parse_move_tree(text) {
 
         /* Handle piece move annotation */
         var move = "";
+        let move_start = i;
         while (!ismoveend(text[i])) {
             move += text[i];
             i++;
@@ -262,6 +265,7 @@ function parse_move_tree(text) {
                 break;
             }
         }
+        let move_end = i-1;
 
         /* Handle redundant place */
         if (move == "..") {
@@ -283,7 +287,7 @@ function parse_move_tree(text) {
         if (at.moves.length > 0) {
             mt.color_choices[color]++;
         }
-        at = at.add_move(moveno, move);
+        at = at.add_move(moveno, move, move_start, move_end);
         if (at.prev != null && moveno < at.prev.moveno) {
             console.log("MESSED UP MOVE ORDER: " + at.prev.moveno + " vs " + moveno);
         }

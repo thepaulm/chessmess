@@ -13,6 +13,45 @@
 				overflow-y: auto;
 				height: 600px;
 			}
+			.textarea-container {
+				position: relative;
+				display: inline-block;
+			}
+			.highlight-backdrop {
+				position: absolute;
+				top: 0;
+				left: 0;
+				margin: 0;
+				white-space: pre-wrap;
+				word-wrap: break-word;
+				color: transparent;
+				overflow: auto;
+				pointer-events: none;
+				font-family: monospace;
+				font-size: 13px;
+				background-color: white;
+				z-index: 1;
+				box-sizing: border-box;
+				scrollbar-width: thin;
+				scrollbar-color: transparent transparent;
+			}
+			.highlight-backdrop::-webkit-scrollbar {
+				width: 0;
+				height: 0;
+			}
+			.highlight-backdrop .highlight {
+				background-color: yellow;
+				color: transparent;
+			}
+			#pgn_paste {
+				position: relative;
+				background-color: transparent;
+				font-family: monospace;
+				font-size: 13px;
+				line-height: normal;
+				resize: none;
+				z-index: 2;
+			}
 		</style>
 	</head>
     <body>
@@ -56,7 +95,10 @@
 		<br>
 		<b>News: You can now log in and store your pgns.</b> <a href="faq.html">FAQ</a>
 		<br>
-		<textarea id="pgn_paste"></textarea>
+		<div class="textarea-container">
+			<div id="pgn_paste_backdrop" class="highlight-backdrop"></div>
+			<textarea id="pgn_paste"></textarea>
+		</div>
 		<br>
 		<textarea id="user_text"></textarea>
 		<br>

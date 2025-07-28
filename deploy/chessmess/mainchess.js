@@ -944,6 +944,7 @@ function make_move(index = null) {
     var gs = copy_gamespace(boardspace_at.gs);
     run_move(move, gs);
     boardspace_at = move.next;
+    window.highlightPgnCharacters(move.move_start, move.move_end);
     boardspace_at.set_gs(gs);
 }
 
@@ -1132,6 +1133,55 @@ async function feedback_button() {
     pgn_paste.style.width = board.width;
     pgn_paste.style.height = board.width / 4;
     user_text.style.width = board.width;
+
+    // Initialize highlight backdrop
+    var backdrop = document.getElementById('pgn_paste_backdrop');
+    var container = document.querySelector('.textarea-container');
+    container.style.width = board.width + 'px';
+    backdrop.style.width = pgn_paste.style.width;
+    backdrop.style.height = pgn_paste.style.height;
+
+    // Match exact styling to prevent scroll height differences
+    var computedStyle = window.getComputedStyle(pgn_paste);
+    backdrop.style.padding = computedStyle.padding;
+    backdrop.style.border = computedStyle.border;
+    backdrop.style.boxSizing = computedStyle.boxSizing;
+    backdrop.style.lineHeight = computedStyle.lineHeight;
+
+    // Sync backdrop with textarea on input and scroll
+    function syncBackdrop() {
+        backdrop.scrollTop = pgn_paste.scrollTop;
+        backdrop.scrollLeft = pgn_paste.scrollLeft;
+    }
+
+    pgn_paste.addEventListener('input', syncBackdrop);
+    pgn_paste.addEventListener('scroll', syncBackdrop);
+
+    // Function to highlight specific characters
+    window.highlightPgnCharacters = function(start, end) {
+        var text = pgn_paste.value;
+        var highlightedHtml = '';
+
+        for (var i = 0; i < text.length; i++) {
+            if (i >= start && i < end) {
+                highlightedHtml += '<span class="highlight">' + escapeHtml(text[i]) + '</span>';
+            } else {
+                highlightedHtml += escapeHtml(text[i]);
+            }
+        }
+
+        backdrop.innerHTML = highlightedHtml + '\n\n';  // Add extra newlines to ensure scrollable area matches
+        // Ensure backdrop scroll matches textarea after update
+        backdrop.scrollTop = pgn_paste.scrollTop;
+        backdrop.scrollLeft = pgn_paste.scrollLeft;
+    };
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
     clear.addEventListener('click', make_clear_handler(pgn_paste));
     rotate.addEventListener('click', rotate_board);
