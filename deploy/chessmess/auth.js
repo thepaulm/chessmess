@@ -9,7 +9,7 @@ function handleCredentialResponse(response) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-			var idToken = response.credential;
+            var idToken = response.credential;
             /* Store this token for the session */
             sessionStorage.setItem('google_id_token', idToken);
 
