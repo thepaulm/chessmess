@@ -9,6 +9,7 @@ let boardspace_at = null;
 let is_rotate = false;
 let is_learn = false;
 let user_text = null;
+let current_user_color = null;
 
 let initial_gs = null;
 
@@ -339,11 +340,16 @@ async function set_board_state(gs) {
     }
 }
 
-async function reset_game_tree(pgn_paste) {
+async function reset_game_tree(pgn_paste, user_color = null) {
     await reload_board();
     moves = parse_move_tree(pgn_paste.value);
     moves.set_initial_gs(initial_gs);
-    if (moves.color_choices['white'] > moves.color_choices['black']) {
+    if (user_color !== null) {
+        var should_rotate = (user_color === 'black');
+        if (should_rotate !== is_rotate) {
+            await rotate_board(null);
+        }
+    } else if (moves.color_choices['white'] > moves.color_choices['black']) {
         if (!is_rotate) {
             await rotate_board(null);
         }
@@ -367,11 +373,12 @@ function make_clear_handler(tarea) {
     }
 }
 
-async function load_new_pgn(text) {
+async function load_new_pgn(text, user_color = null) {
+    current_user_color = user_color;
     var pgn_paste = document.getElementById('pgn_paste');
     pgn_paste.value = text;
     window.setPgnDiffRanges([]);
-    await reset_game_tree(pgn_paste);
+    await reset_game_tree(pgn_paste, user_color);
     boardspace_at = moves.top;
 }
 
@@ -980,8 +987,8 @@ function make_learn_handler(pgn_paste) {
 
         /* Reset the board and find matching saved game in parallel */
         const [, result] = await Promise.all([
-            reset_game_tree(pgn_paste),
-            find_best_pgn_match(pgn_paste.value)
+            reset_game_tree(pgn_paste, current_user_color),
+            find_best_pgn_match(pgn_paste.value, current_user_color)
         ]);
 
         tell(result.name ? `Learning: ${result.name}` : 'Learning...');
@@ -1183,13 +1190,14 @@ async function feedback_button() {
     pgn_paste.addEventListener('input', syncBackdrop);
     pgn_paste.addEventListener('scroll', syncBackdrop);
 
-    var pgn_diff_set = new Set();
+    var pgn_diff_map = new Map();
 
     window.setPgnDiffRanges = function(ranges) {
-        pgn_diff_set = new Set();
+        pgn_diff_map = new Map();
         for (const r of ranges) {
+            var cls = r.color === 'blue' ? 'highlight-diff-blue' : 'highlight-diff-red';
             for (let i = r.start; i <= r.end; i++) {
-                pgn_diff_set.add(i);
+                pgn_diff_map.set(i, cls);
             }
         }
     };
@@ -1202,8 +1210,8 @@ async function feedback_button() {
         for (var i = 0; i < text.length; i++) {
             if (i >= start && i < end) {
                 highlightedHtml += '<span class="highlight">' + escapeHtml(text[i]) + '</span>';
-            } else if (pgn_diff_set.has(i)) {
-                highlightedHtml += '<span class="highlight-diff">' + escapeHtml(text[i]) + '</span>';
+            } else if (pgn_diff_map.has(i)) {
+                highlightedHtml += '<span class="' + pgn_diff_map.get(i) + '">' + escapeHtml(text[i]) + '</span>';
             } else {
                 highlightedHtml += escapeHtml(text[i]);
             }

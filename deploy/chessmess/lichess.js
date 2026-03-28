@@ -87,8 +87,9 @@ function render_lichess_game_list(games, username) {
         li.appendChild(document.createTextNode(`${date} · ${color} vs ${opponent}${opening ? ' · ' + opening : ''}`));
         li.addEventListener('mouseover', () => { li.style.backgroundColor = '#a0a8aa'; });
         li.addEventListener('mouseout',  () => { li.style.backgroundColor = ''; });
-        li.addEventListener('mousedown', () => { load_new_pgn(game.pgn); });
-        li.addEventListener('touchstart', () => { load_new_pgn(game.pgn); });
+        const user_color = is_white ? 'white' : 'black';
+        li.addEventListener('mousedown', () => { load_new_pgn(game.pgn, user_color); });
+        li.addEventListener('touchstart', () => { load_new_pgn(game.pgn, user_color); });
         list.appendChild(li);
     }
 }

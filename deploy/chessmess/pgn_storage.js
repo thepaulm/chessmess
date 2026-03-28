@@ -155,7 +155,7 @@ function extract_pgn_moves_with_positions(pgn_text) {
         let at = mt.top;
         while (at.moves.length > 0) {
             const m = at.moves[0];
-            moves.push({ move: m.move, start: m.move_start, end: m.move_end });
+            moves.push({ move: m.move, start: m.move_start, end: m.move_end, color: m.color });
             at = m.next;
         }
         return moves;
@@ -164,7 +164,7 @@ function extract_pgn_moves_with_positions(pgn_text) {
     }
 }
 
-async function find_best_pgn_match(pgn_text) {
+async function find_best_pgn_match(pgn_text, user_color = null) {
     await fetch_all_pgns();
 
     const current_moves = extract_pgn_moves_with_positions(pgn_text);
@@ -191,6 +191,11 @@ async function find_best_pgn_match(pgn_text) {
 
     if (!best_name) return { name: null, diff_ranges: [] };
 
-    const diff_ranges = current_moves.slice(best_count).map(m => ({ start: m.start, end: m.end }));
+    // Find the first diverging move and mark just that one
+    if (best_count >= current_moves.length) return { name: best_name, diff_ranges: [] };
+
+    const first_diff = current_moves[best_count];
+    const is_my_move = user_color === null || first_diff.color === user_color;
+    const diff_ranges = [{ start: first_diff.start, end: first_diff.end, color: is_my_move ? 'red' : 'blue' }];
     return { name: best_name, diff_ranges };
 }
