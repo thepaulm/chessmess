@@ -370,7 +370,8 @@ function make_clear_handler(tarea) {
 async function load_new_pgn(text) {
     var pgn_paste = document.getElementById('pgn_paste');
     pgn_paste.value = text;
-    await reload_board();
+    await reset_game_tree(pgn_paste);
+    boardspace_at = moves.top;
 }
 
 async function rotate_board(event) {
@@ -925,6 +926,17 @@ async function prev_move() {
     }
     await set_board_state(at.gs);
     boardspace_at = at;
+
+    // Highlight the move that led to this position (stored in at.prev.moves)
+    if (at.prev != null) {
+        for (var i = 0; i < at.prev.moves.length; i++) {
+            if (at.prev.moves[i].next == at) {
+                window.highlightPgnCharacters(at.prev.moves[i].move_start, at.prev.moves[i].move_end);
+                return;
+            }
+        }
+    }
+    window.highlightPgnCharacters(0, 0);
 }
 
 function make_move(index = null) {
