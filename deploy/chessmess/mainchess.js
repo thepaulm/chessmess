@@ -965,8 +965,13 @@ function make_learn_handler(pgn_paste) {
         tell("Learning ...");
         is_learn = true;
 
-        /* Reset the board and reparse the pgn */
-        await reset_game_tree(pgn_paste);
+        /* Reset the board and find matching saved game in parallel */
+        const [, match] = await Promise.all([
+            reset_game_tree(pgn_paste),
+            find_best_pgn_match(pgn_paste.value)
+        ]);
+
+        tell(match ? `Learning: ${match}` : 'Learning...');
 
         moves.linearize();
 

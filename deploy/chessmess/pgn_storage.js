@@ -1,4 +1,9 @@
+let pgn_cache = {};
+let stored_pgn_names = [];
+
 function add_pgn_filename(pgn) {
+    stored_pgn_names.push(pgn);
+
     let pgnlist = document.getElementById("pgn_list");
     let li = document.createElement("li");
     li.textContent = pgn;
@@ -79,6 +84,7 @@ function make_load_handler(pgn_name) {
         })
         .then(res => res.json())
         .then(data => {
+            pgn_cache[pgn_name] = data['pgn_data'];
             load_new_pgn(data['pgn_data']);
         }).catch(console.error);
     }
@@ -101,4 +107,69 @@ async function on_user_login() {
             add_pgn_filename(pgn);
         }
     }
+}
+
+async function fetch_all_pgns() {
+    const idToken = sessionStorage.getItem('google_id_token');
+    if (!idToken) return;
+    for (const name of stored_pgn_names) {
+        if (pgn_cache[name] !== undefined) continue;
+        try {
+            const response = await fetch('/user-pgn', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ pgn_name: name })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                pgn_cache[name] = data['pgn_data'] || '';
+            }
+        } catch (e) {
+            // skip file on error
+        }
+    }
+}
+
+function extract_pgn_moves(pgn_text) {
+    try {
+        const mt = parse_move_tree(pgn_text);
+        const moves = [];
+        let at = mt.top;
+        while (at.moves.length > 0) {
+            moves.push(at.moves[0].move);
+            at = at.moves[0].next;
+        }
+        return moves;
+    } catch (e) {
+        return [];
+    }
+}
+
+async function find_best_pgn_match(pgn_text) {
+    await fetch_all_pgns();
+
+    const current_moves = extract_pgn_moves(pgn_text);
+    if (current_moves.length === 0) return null;
+
+    let best_name = null;
+    let best_count = 0;
+
+    for (const [name, content] of Object.entries(pgn_cache)) {
+        if (!content) continue;
+        const moves = extract_pgn_moves(content);
+        let count = 0;
+        for (let i = 0; i < Math.min(current_moves.length, moves.length); i++) {
+            if (current_moves[i] === moves[i]) count++;
+            else break;
+        }
+        if (count > best_count) {
+            best_count = count;
+            best_name = name;
+        }
+    }
+
+    return best_count > 0 ? best_name : null;
 }
