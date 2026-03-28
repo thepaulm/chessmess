@@ -164,25 +164,35 @@ function extract_pgn_moves_with_positions(pgn_text) {
     }
 }
 
+function count_matching_moves_tree(current_moves, pgn_content) {
+    try {
+        const mt = parse_move_tree(pgn_content);
+        let at = mt.top;
+        let count = 0;
+        for (const m of current_moves) {
+            const match = at.moves.find(opt => opt.move === m.move);
+            if (!match) break;
+            at = match.next;
+            count++;
+        }
+        return count;
+    } catch (e) {
+        return 0;
+    }
+}
+
 async function find_best_pgn_match(pgn_text, user_color = null) {
     await fetch_all_pgns();
 
     const current_moves = extract_pgn_moves_with_positions(pgn_text);
     if (current_moves.length === 0) return { name: null, diff_ranges: [] };
 
-    const current_strings = current_moves.map(m => m.move);
-
     let best_name = null;
     let best_count = 0;
 
     for (const [name, content] of Object.entries(pgn_cache)) {
         if (!content) continue;
-        const moves = extract_pgn_moves(content);
-        let count = 0;
-        for (let i = 0; i < Math.min(current_strings.length, moves.length); i++) {
-            if (current_strings[i] === moves[i]) count++;
-            else break;
-        }
+        const count = count_matching_moves_tree(current_moves, content);
         if (count > best_count) {
             best_count = count;
             best_name = name;
@@ -191,7 +201,6 @@ async function find_best_pgn_match(pgn_text, user_color = null) {
 
     if (!best_name) return { name: null, diff_ranges: [] };
 
-    // Find the first diverging move and mark just that one
     if (best_count >= current_moves.length) return { name: best_name, diff_ranges: [] };
 
     const first_diff = current_moves[best_count];
