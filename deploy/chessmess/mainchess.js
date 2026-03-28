@@ -1035,6 +1035,7 @@ function load_piece_image(type, filename) {
 
 function load_audio_style(type, filename) {
     var a = new Audio(filename);
+    a.preload = 'auto';
     audio_styles[type] = a;
 }
 

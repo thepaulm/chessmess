@@ -31,15 +31,18 @@ async function success_animation(piece, x, y) {
 
 async function game_over_audio() {
     var a = audio_styles['game_over'];
+    a.currentTime = 0;
     await a.play();
 }
 
 async function move_audio() {
     var a = audio_styles['move'];
+    a.currentTime = 0;
     await a.play();
 }
 
 async function bad_move_audio() {
     var a = audio_styles['bad_move'];
+    a.currentTime = 0;
     await a.play();
 }
