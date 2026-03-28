@@ -148,11 +148,29 @@ function extract_pgn_moves(pgn_text) {
     }
 }
 
+function extract_pgn_moves_with_positions(pgn_text) {
+    try {
+        const mt = parse_move_tree(pgn_text);
+        const moves = [];
+        let at = mt.top;
+        while (at.moves.length > 0) {
+            const m = at.moves[0];
+            moves.push({ move: m.move, start: m.move_start, end: m.move_end });
+            at = m.next;
+        }
+        return moves;
+    } catch (e) {
+        return [];
+    }
+}
+
 async function find_best_pgn_match(pgn_text) {
     await fetch_all_pgns();
 
-    const current_moves = extract_pgn_moves(pgn_text);
-    if (current_moves.length === 0) return null;
+    const current_moves = extract_pgn_moves_with_positions(pgn_text);
+    if (current_moves.length === 0) return { name: null, diff_ranges: [] };
+
+    const current_strings = current_moves.map(m => m.move);
 
     let best_name = null;
     let best_count = 0;
@@ -161,8 +179,8 @@ async function find_best_pgn_match(pgn_text) {
         if (!content) continue;
         const moves = extract_pgn_moves(content);
         let count = 0;
-        for (let i = 0; i < Math.min(current_moves.length, moves.length); i++) {
-            if (current_moves[i] === moves[i]) count++;
+        for (let i = 0; i < Math.min(current_strings.length, moves.length); i++) {
+            if (current_strings[i] === moves[i]) count++;
             else break;
         }
         if (count > best_count) {
@@ -171,5 +189,8 @@ async function find_best_pgn_match(pgn_text) {
         }
     }
 
-    return best_count > 0 ? best_name : null;
+    if (!best_name) return { name: null, diff_ranges: [] };
+
+    const diff_ranges = current_moves.slice(best_count).map(m => ({ start: m.start, end: m.end }));
+    return { name: best_name, diff_ranges };
 }

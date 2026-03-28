@@ -370,6 +370,7 @@ function make_clear_handler(tarea) {
 async function load_new_pgn(text) {
     var pgn_paste = document.getElementById('pgn_paste');
     pgn_paste.value = text;
+    window.setPgnDiffRanges([]);
     await reset_game_tree(pgn_paste);
     boardspace_at = moves.top;
 }
@@ -978,12 +979,14 @@ function make_learn_handler(pgn_paste) {
         is_learn = true;
 
         /* Reset the board and find matching saved game in parallel */
-        const [, match] = await Promise.all([
+        const [, result] = await Promise.all([
             reset_game_tree(pgn_paste),
             find_best_pgn_match(pgn_paste.value)
         ]);
 
-        tell(match ? `Learning: ${match}` : 'Learning...');
+        tell(result.name ? `Learning: ${result.name}` : 'Learning...');
+        window.setPgnDiffRanges(result.diff_ranges);
+        window.highlightPgnCharacters(0, 0);
 
         moves.linearize();
 
@@ -1180,6 +1183,17 @@ async function feedback_button() {
     pgn_paste.addEventListener('input', syncBackdrop);
     pgn_paste.addEventListener('scroll', syncBackdrop);
 
+    var pgn_diff_set = new Set();
+
+    window.setPgnDiffRanges = function(ranges) {
+        pgn_diff_set = new Set();
+        for (const r of ranges) {
+            for (let i = r.start; i <= r.end; i++) {
+                pgn_diff_set.add(i);
+            }
+        }
+    };
+
     // Function to highlight specific characters
     window.highlightPgnCharacters = function(start, end) {
         var text = pgn_paste.value;
@@ -1188,6 +1202,8 @@ async function feedback_button() {
         for (var i = 0; i < text.length; i++) {
             if (i >= start && i < end) {
                 highlightedHtml += '<span class="highlight">' + escapeHtml(text[i]) + '</span>';
+            } else if (pgn_diff_set.has(i)) {
+                highlightedHtml += '<span class="highlight-diff">' + escapeHtml(text[i]) + '</span>';
             } else {
                 highlightedHtml += escapeHtml(text[i]);
             }
