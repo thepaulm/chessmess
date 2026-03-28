@@ -35,6 +35,7 @@ For offline/airplane testing, open `fakeuser.html` instead of `index.html` — i
 | `move_tree.js` | Game tree data structure (`Move`, `MoveOptionNode`); random path selection |
 | `effects.js` | Audio playback and visual animations (success/fail markers) |
 | `pgn_storage.js` | PGN upload/download UI; list of stored PGNs |
+| `lichess.js` | Lichess game fetcher — calls the Lichess API directly from the browser, parses returned PGN, renders game list |
 | `auth.js` | Google OAuth sign-in flow |
 | `common.js` | Low-level string/character utilities (chess coordinate helpers) |
 | `backend.py` | HTTP server: token verification, PGN upload/download, user directories |
@@ -46,6 +47,7 @@ For offline/airplane testing, open `fakeuser.html` instead of `index.html` — i
 - **Backend**: Python 3 `BaseHTTPRequestHandler`; `google-auth` for OAuth verification
 - **Auth**: Google OAuth 2.0 (Client ID hardcoded in both `auth.js` and `backend.py`)
 - **Storage**: PGN files stored per-user in a server-side directory; filenames are hex-encoded for filesystem safety
+- **Lichess**: Games are fetched client-side via `https://lichess.org/api/games/user/{username}` (Lichess allows CORS). No backend involvement. A personal API token is optional (needed only for private games). The response is raw PGN, split on blank lines before `[Event` tags.
 
 ## Audio
 
