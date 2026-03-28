@@ -378,6 +378,7 @@ async function load_new_pgn(text, user_color = null) {
     var pgn_paste = document.getElementById('pgn_paste');
     pgn_paste.value = text;
     window.setPgnDiffRanges([]);
+    window.highlightPgnCharacters(0, 0);
     await reset_game_tree(pgn_paste, user_color);
     boardspace_at = moves.top;
 }
