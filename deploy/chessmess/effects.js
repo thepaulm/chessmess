@@ -7,14 +7,18 @@ async function piece_to_screen(type, position) {
 
     document.body.appendChild(p);
 
-    let x = new Promise((resolve, reject) => {
-        p.onload = () => {
-            p.style.position = 'absolute';
-            set_piece_image(board, p, position);
-            resolve(p);
-        };
-    });
-    await x;
+    if (p.complete) {
+        p.style.position = 'absolute';
+        set_piece_image(board, p, position);
+    } else {
+        await new Promise((resolve) => {
+            p.onload = () => {
+                p.style.position = 'absolute';
+                set_piece_image(board, p, position);
+                resolve();
+            };
+        });
+    }
     return p;
 }
 async function fail_animation(piece, x, y) {

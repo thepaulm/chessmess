@@ -12,8 +12,8 @@ let user_text = null;
 
 let initial_gs = null;
 
-let piece_images = new Map();
-let audio_styles = new Map();
+let piece_images = {};
+let audio_styles = {};
 
 function img_row(cpos) {
     return 8 - Number(cpos[1]);
@@ -139,7 +139,7 @@ async function check_learn_move(piece, x, y) {
     var right_piece = null;
     var index = null;
 
-    for (let index = 0; index < boardspace_at.moves.length; index++) {
+    for (index = 0; index < boardspace_at.moves.length; index++) {
 
       // User could have a choice here
       var right_move = boardspace_at.moves[index];
@@ -430,25 +430,29 @@ function king_at_start(color) {
 
 function find_pawn_src(color, trow, tfile) {
     /* first check pawn one off */
-    var p = boardspace[trow+1][tfile];
-    if (p != null && p.type == "P" && p.color == color) {
-        return p;
+    if (trow + 1 <= 8) {
+        var p = boardspace[trow+1][tfile];
+        if (p != null && p.type == "P" && p.color == color) {
+            return p;
+        }
     }
-    p = boardspace[trow-1][tfile];
-    if (p != null && p.type == "P" && p.color == color) {
-        return p;
+    if (trow - 1 >= 1) {
+        var p = boardspace[trow-1][tfile];
+        if (p != null && p.type == "P" && p.color == color) {
+            return p;
+        }
     }
 
     /* check for first move double */
     if (trow == 4) {
         p = boardspace[trow-2][tfile];
-        if (p != null && p.type == "P") {
+        if (p != null && p.type == "P" && p.color == color) {
             return p;
         }
     }
     if (trow == 5) {
         p = boardspace[trow + 2][tfile];
-        if (p != null && p.type == "P") {
+        if (p != null && p.type == "P" && p.color == color) {
             return p;
         }
     }
@@ -681,7 +685,7 @@ function find_rook_pattern(type, color, trow, tfile, filerestrict, rowrestrict) 
 }
 
 function find_bishop_src(color, trow, tfile, filerestrict, rowrestrict) {
-    return find_bishop_pattern('B', color, trow, tfile, filerestrict);
+    return find_bishop_pattern('B', color, trow, tfile, filerestrict, rowrestrict);
 }
 
 function find_rook_src(color, trow, tfile, filerestrict, rowrestrict) {
@@ -689,9 +693,9 @@ function find_rook_src(color, trow, tfile, filerestrict, rowrestrict) {
 }
 
 function find_queen_src(color, trow, tfile, filerestrict, rowrestrict) {
-    var piece = find_bishop_pattern('Q', color, trow, tfile, filerestrict);
+    var piece = find_bishop_pattern('Q', color, trow, tfile, filerestrict, rowrestrict);
     if (piece == null) {
-        piece = find_rook_pattern('Q', color, trow, tfile);
+        piece = find_rook_pattern('Q', color, trow, tfile, filerestrict, rowrestrict);
     }
     return piece;
 }
@@ -839,7 +843,7 @@ function find_attack_pawn(move) {
     } else {
         trow = brow(movestr) + 1;
     }
-    piece = boardspace[trow][tfile];
+    var piece = boardspace[trow][tfile];
     return piece;
 }
 
@@ -919,7 +923,7 @@ async function prev_move() {
         console.log("No prev moves.");
         return;
     }
-    set_board_state(at.gs);
+    await set_board_state(at.gs);
     boardspace_at = at;
 }
 

@@ -118,11 +118,13 @@ class RequestHandler(BaseHTTPRequestHandler):
                         self.wfile.write(json.dumps(error_message).encode('utf-8'))
                 else:
                     self.send_response(401)
+                    self.end_headers()
 
         elif self.path == "/user-pgn":
             auth_header = self.headers.get('Authorization')
             if not auth_header or not auth_header.startswith("Bearer "):
                 self.send_response(401)
+                self.end_headers()
             else:
                 token = auth_header.split(" ")[1]
                 result = verify_google_token(token)
@@ -137,7 +139,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                         with open(os.path.join(user_dir_name(result['user_id']), filename)) as file:
                             filedata = file.read()
                     except FileNotFoundError:
-                        pass
+                        self.send_response(404)
+                        self.end_headers()
+                        return
                     except IOError as e:
                         print(f"PGN Read error: {e}")
                     self.send_response(200)
@@ -146,6 +150,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.wfile.write(json.dumps({"pgn_data": filedata}).encode("utf-8"))
                 else:
                     self.send_response(401)
+                    self.end_headers()
 
         elif self.path == "/verify-token":
             # Read and parse the request body
@@ -173,6 +178,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps(result).encode("utf-8"))
             else:
                 self.send_response(401)
+                self.end_headers()
 
     def do_GET(self):
         if self.path == "/user-pgn-list":
@@ -182,6 +188,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 token = auth_header.split(" ")[1]
                 result = verify_google_token(token)
+                if not result['success']:
+                    self.send_response(401)
+                    self.end_headers()
+                    return
                 listing = get_pgn_listing(result['user_id'])
                 output = json.dumps({"pgns": listing}, indent=4)
                 print("Sending:" + output)
@@ -191,6 +201,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(output.encode('utf-8'))
         else:
             self.send_response(404)
+            self.end_headers()
 
 # Set up and run the server
 def run_server():

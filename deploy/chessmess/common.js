@@ -29,7 +29,7 @@ function isspace(c) {
 }
 
 function ismoveend(c) {
-    if (isspace(c) || c == '(' || c == ')') {
+    if (isspace(c) || c == '(' || c == ')' || c == '{') {
         return true;
     }
     return false

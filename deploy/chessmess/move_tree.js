@@ -202,7 +202,7 @@ function parse_move_tree(text) {
 
         /* Handle [] comment */
         if (text[i] == '[') {
-            while (text[i] != ']') {
+            while (i < text.length && text[i] != ']') {
                 i++;
             }
             i++;
@@ -211,7 +211,7 @@ function parse_move_tree(text) {
 
         /* Handle {} comment */
         if (text[i] == '{') {
-            while (text[i] != '}') {
+            while (i < text.length && text[i] != '}') {
                 i++;
             }
             i++;

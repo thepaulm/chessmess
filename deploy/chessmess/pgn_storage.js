@@ -1,7 +1,7 @@
 function add_pgn_filename(pgn) {
     let pgnlist = document.getElementById("pgn_list");
     let li = document.createElement("li");
-    li.innerHTML = pgn;
+    li.textContent = pgn;
     li.addEventListener('mouseover', () => {
         li.style.backgroundColor = '#a0a8aa';
     });
