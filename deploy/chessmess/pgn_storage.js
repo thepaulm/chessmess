@@ -12,57 +12,58 @@ function add_pgn_filename(pgn) {
     li.addEventListener('mousedown', lh);
     li.addEventListener('touchstart', lh);
     pgnlist.appendChild(li);
+}
 
+function read_file_as_base64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function upload_one_pgn(file) {
+    const fileData = await read_file_as_base64(file);
+    const idToken = sessionStorage.getItem('google_id_token');
+    const response = await fetch('/upload-pgn', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ filename: file.name, content: fileData }),
+    });
+    if (!response.ok) {
+        throw new Error(`${file.name}: ${response.statusText}`);
+    }
+    add_pgn_filename(file.name);
 }
 
 async function upload_pgn(event) {
-    event.preventDefault(); // Prevent the form from submitting normally
+    event.preventDefault();
 
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0]; // Get the selected file
-
-    if (!file) {
+    const files = Array.from(document.getElementById('fileInput').files);
+    if (files.length === 0) {
         alert('Please select a file!');
         return;
     }
 
-    // Read the file content as Base64
-    const reader = new FileReader();
-    reader.onload = async function () {
-        const fileData = reader.result.split(',')[1]; // Get Base64 data (remove data URL prefix)
-        const jsonBlob = {
-            filename: file.name,
-            content: fileData, // Base64 encoded content
-        };
+    const status = document.getElementById('response');
+    status.innerText = `Uploading ${files.length} file${files.length === 1 ? '' : 's'}...`;
 
+    const errors = [];
+    for (const file of files) {
         try {
-			let idToken = sessionStorage.getItem('google_id_token');
-            const response = await fetch('/upload-pgn', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-					'Authorization': `Bearer ${idToken}`, // Add the token in the Authorization header
-                },
-                body: JSON.stringify(jsonBlob), // Send the JSON blob
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                document.getElementById('response').innerText = 'Upload Done.';
-                add_pgn_filename(file.name);
-            } else {
-                throw new Error(`Error: ${response.statusText}`);
-            }
-        } catch (error) {
-            document.getElementById('response').innerText = `Upload failed: ${error.message}`;
+            await upload_one_pgn(file);
+        } catch (e) {
+            errors.push(e.message);
         }
-    };
+    }
 
-    reader.onerror = function () {
-        alert('Failed to read the file.');
-    };
-
-    reader.readAsDataURL(file); // Read file as a Base64 data URL
+    status.innerText = errors.length === 0
+        ? `Uploaded ${files.length} file${files.length === 1 ? '' : 's'}.`
+        : `Done with errors: ${errors.join('; ')}`;
 }
 
 function make_load_handler(pgn_name) {
@@ -71,7 +72,7 @@ function make_load_handler(pgn_name) {
         fetch('/user-pgn', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${idToken}`, // Add the token in the Authorization header
+                'Authorization': `Bearer ${idToken}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ pgn_name: pgn_name })
@@ -84,13 +85,11 @@ function make_load_handler(pgn_name) {
 }
 
 async function on_user_login() {
-
     let idToken = sessionStorage.getItem('google_id_token');
-    /* Get user pgn list */
     var fresp = await fetch('/user-pgn-list', {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${idToken}`, // Add the token in the Authorization header
+            'Authorization': `Bearer ${idToken}`,
             'Content-Type': 'application/json'
         }
     });
@@ -103,4 +102,3 @@ async function on_user_login() {
         }
     }
 }
-
