@@ -55,7 +55,7 @@ async function move_audio() {
     if (_moveAudioCtx.state === 'suspended') await _moveAudioCtx.resume();
     const source = _moveAudioCtx.createBufferSource();
     source.buffer = _moveAudioBuffer;
-    source.playbackRate.value = 0.9 + Math.random() * 0.2;  // ±10% pitch variation
+    source.playbackRate.value = 0.85 + Math.random() * 0.3;  // ±15% pitch variation
     source.connect(_moveAudioCtx.destination);
     await new Promise(resolve => {
         source.onended = resolve;
