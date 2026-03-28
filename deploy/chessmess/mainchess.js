@@ -1194,6 +1194,7 @@ async function feedback_button() {
     learn.addEventListener('click', make_learn_handler(pgn_paste));
     feedback.addEventListener('click', feedback_button);
     upload.addEventListener('submit', upload_pgn);
+    document.getElementById('lichess-fetch').addEventListener('click', fetch_lichess_games);
 
     document.onkeydown = key_press;
 
