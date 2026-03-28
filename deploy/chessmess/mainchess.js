@@ -1113,6 +1113,7 @@ function load_audio_styles() {
     load_audio_style("game_over", "mixkit-completion-of-a-level-2063.wav");
     load_audio_style("move", "MovePiece.mp3");
     load_audio_style("bad_move", "mixkit-interface-option-select-2573.wav");
+    setup_move_audio("MovePiece.mp3");
 }
 
 async function feedback_button() {

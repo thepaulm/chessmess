@@ -35,10 +35,32 @@ async function game_over_audio() {
     await a.play();
 }
 
+let _moveAudioCtx = null;
+let _moveAudioBuffer = null;
+
+async function setup_move_audio(filename) {
+    _moveAudioCtx = new AudioContext();
+    const response = await fetch(filename);
+    const arrayBuffer = await response.arrayBuffer();
+    _moveAudioBuffer = await _moveAudioCtx.decodeAudioData(arrayBuffer);
+}
+
 async function move_audio() {
-    var a = audio_styles['move'];
-    a.currentTime = 0;
-    await a.play();
+    if (!_moveAudioBuffer) {
+        var a = audio_styles['move'];
+        a.currentTime = 0;
+        await a.play();
+        return;
+    }
+    if (_moveAudioCtx.state === 'suspended') await _moveAudioCtx.resume();
+    const source = _moveAudioCtx.createBufferSource();
+    source.buffer = _moveAudioBuffer;
+    source.playbackRate.value = 0.9 + Math.random() * 0.2;  // ±10% pitch variation
+    source.connect(_moveAudioCtx.destination);
+    await new Promise(resolve => {
+        source.onended = resolve;
+        source.start(0);
+    });
 }
 
 async function bad_move_audio() {
