@@ -180,6 +180,41 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.send_response(401)
                 self.end_headers()
 
+    def do_DELETE(self):
+        if self.path == "/delete-pgn":
+            auth_header = self.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith("Bearer "):
+                self.send_response(401)
+                self.end_headers()
+                return
+            token = auth_header.split(" ")[1]
+            result = verify_google_token(token)
+            if not result['success']:
+                self.send_response(401)
+                self.end_headers()
+                return
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+            filename = filesystem_name(data['pgn_name'])
+            file_path = os.path.join(user_dir_name(result['user_id']), filename)
+            try:
+                os.remove(file_path)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"message": "Deleted."}).encode('utf-8'))
+            except FileNotFoundError:
+                self.send_response(404)
+                self.end_headers()
+            except Exception as e:
+                print(f"Delete error: {e}")
+                self.send_response(500)
+                self.end_headers()
+        else:
+            self.send_response(404)
+            self.end_headers()
+
     def do_GET(self):
         if self.path == "/user-pgn-list":
             auth_header = self.headers.get('Authorization')

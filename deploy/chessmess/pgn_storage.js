@@ -6,16 +6,54 @@ function add_pgn_filename(pgn) {
 
     let pgnlist = document.getElementById("pgn_list");
     let li = document.createElement("li");
-    li.textContent = pgn;
-    li.addEventListener('mouseover', () => {
-        li.style.backgroundColor = '#a0a8aa';
-    });
-    li.addEventListener('mouseout', () => {
-        li.style.backgroundColor = '';
-    });
+    li.style.display = 'flex';
+    li.style.alignItems = 'center';
+    li.style.justifyContent = 'space-between';
+
+    let label = document.createElement("span");
+    label.textContent = pgn;
+    label.style.flexGrow = '1';
+    label.style.cursor = 'pointer';
     let lh = make_load_handler(pgn);
-    li.addEventListener('mousedown', lh);
-    li.addEventListener('touchstart', lh);
+    label.addEventListener('mousedown', lh);
+    label.addEventListener('touchstart', lh);
+
+    let del = document.createElement("button");
+    del.textContent = '✕';
+    del.title = 'Delete';
+    del.style.marginLeft = '6px';
+    del.style.cursor = 'pointer';
+    del.style.background = 'none';
+    del.style.border = 'none';
+    del.style.color = '#888';
+    del.style.fontSize = '0.85em';
+    del.style.padding = '0 2px';
+    del.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!confirm(`Delete "${pgn}"?`)) return;
+        const idToken = sessionStorage.getItem('google_id_token');
+        const resp = await fetch('/delete-pgn', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ pgn_name: pgn }),
+        });
+        if (resp.ok) {
+            pgnlist.removeChild(li);
+            stored_pgn_names = stored_pgn_names.filter(n => n !== pgn);
+            delete pgn_cache[pgn];
+        } else {
+            alert('Delete failed.');
+        }
+    });
+
+    li.addEventListener('mouseover', () => { li.style.backgroundColor = '#a0a8aa'; });
+    li.addEventListener('mouseout', () => { li.style.backgroundColor = ''; });
+
+    li.appendChild(label);
+    li.appendChild(del);
     pgnlist.appendChild(li);
 }
 
