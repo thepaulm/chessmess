@@ -33,7 +33,7 @@ function add_pgn_filename(pgn) {
         if (!confirm(`Delete "${pgn}"?`)) return;
         const idToken = sessionStorage.getItem('google_id_token');
         const resp = await fetch('/delete-pgn', {
-            method: 'DELETE',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${idToken}`,

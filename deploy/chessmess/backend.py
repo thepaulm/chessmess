@@ -159,38 +159,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     self.send_response(401)
                     self.end_headers()
 
-        elif self.path == "/verify-token":
-            self.log("verify-token handler")
-            # Read and parse the request body
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data)
-
-            # Extract the token
-            token = data.get("token")
-            if not token:
-                self.send_response(400)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": False, "error": "Token is missing"}).encode("utf-8"))
-                return
-
-            # Verify the token
-            result = verify_google_token(token)
-            if result['success']:
-                make_user_dir(result['user_id'])
-                # Respond with the verification result
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps(result).encode("utf-8"))
-            else:
-                self.send_response(401)
-                self.end_headers()
-
-    def do_DELETE(self):
-        self.log("received")
-        if self.path == "/delete-pgn":
+        elif self.path == "/delete-pgn":
             self.log("delete-pgn handler")
             auth_header = self.headers.get('Authorization')
             if not auth_header or not auth_header.startswith("Bearer "):
@@ -226,9 +195,35 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.log(f"delete-pgn error: {e}")
                 self.send_response(500)
                 self.end_headers()
-        else:
-            self.send_response(404)
-            self.end_headers()
+
+        elif self.path == "/verify-token":
+            self.log("verify-token handler")
+            # Read and parse the request body
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+
+            # Extract the token
+            token = data.get("token")
+            if not token:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": "Token is missing"}).encode("utf-8"))
+                return
+
+            # Verify the token
+            result = verify_google_token(token)
+            if result['success']:
+                make_user_dir(result['user_id'])
+                # Respond with the verification result
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode("utf-8"))
+            else:
+                self.send_response(401)
+                self.end_headers()
 
     def do_GET(self):
         self.log("received")
