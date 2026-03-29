@@ -13,14 +13,11 @@ All deployable code lives in `deploy/chessmess/`. There is no build step.
 
 ## Running Locally
 
-Two Python servers need to be running:
+One Python server needs to be running:
 
 ```bash
 # Main server (auth + PGN storage) on port 8000
 python deploy/chessmess/backend.py -u /path/to/user/pgn/directory
-
-# Feedback collection server on port 8245
-python deploy/chessmess/http_server.py
 ```
 
 Then serve the static files (e.g. `python -m http.server` from `deploy/chessmess/`).
@@ -41,7 +38,6 @@ For offline/airplane testing, open `fakeuser.html` instead of `index.html` — i
 | `auth.js` | Google OAuth sign-in flow |
 | `common.js` | Low-level string/character utilities (chess coordinate helpers) |
 | `backend.py` | HTTP server: token verification, PGN upload/download/delete, user directories |
-| `http_server.py` | Separate feedback collection server (port 8245) |
 
 ## Tech Stack
 
@@ -53,7 +49,7 @@ For offline/airplane testing, open `fakeuser.html` instead of `index.html` — i
 
 ## Audio
 
-Audio files (`MovePiece.mp3`, two `.wav` files) live in `deploy/chessmess/`. They are loaded once at startup with `preload = 'auto'` and replayed by resetting `currentTime = 0` before each `.play()` call. The move sound uses the Web Audio API with a randomised `playbackRate` (0.85–1.15×) for pitch variation. Don't remove the reset or the preload — both are needed to avoid playback delay.
+Audio files (`MovePiece.mp3`, two `.wav` files) live in `deploy/chessmess/`. They are loaded once at startup with `preload = 'auto'` and replayed by resetting `currentTime = 0` before each `.play()` call. The move sound uses the Web Audio API with a randomised `playbackRate` (0.85–1.15×) for pitch variation. Don't remove the reset or the preload — both are needed to avoid playback delay. The move sound also plays on left/right arrow key navigation (only when there is a move to make).
 
 ## PGN Diff Highlighting
 
