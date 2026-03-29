@@ -975,9 +975,15 @@ function make_move(index = null) {
 
 async function key_press(k) {
     if (k.key == "ArrowRight") {
-        make_move();
+        if (boardspace_at != null && boardspace_at.moves.length > 0) {
+            make_move();
+            move_audio();
+        }
     } else if (k.key == "ArrowLeft") {
-        await prev_move();
+        if (boardspace_at != null && boardspace_at.prev != null) {
+            await prev_move();
+            move_audio();
+        }
     }
 }
 
@@ -1148,10 +1154,6 @@ function load_audio_styles() {
     setup_move_audio("MovePiece.mp3");
 }
 
-async function feedback_button() {
-    var w = open('feedback.html', '_blank', 'popup,width=600,height=400');
-}
-
 (function () {
     board = document.getElementById('board')
     board.addEventListener('dragstart', (e) => {
@@ -1162,11 +1164,10 @@ async function feedback_button() {
     var clear = document.getElementById('clear');
     var rotate = document.getElementById('rotate');
     var learn = document.getElementById('learn');
-    var feedback = document.getElementById('feedback');
     var upload = document.getElementById('uploadForm');
-    pgn_paste.style.width = board.width;
-    pgn_paste.style.height = board.width / 4;
-    user_text.style.width = board.width;
+    pgn_paste.style.width = board.width + 'px';
+    pgn_paste.style.height = (board.width / 4) + 'px';
+    user_text.style.width = board.width + 'px';
 
     // Initialize highlight backdrop
     var backdrop = document.getElementById('pgn_paste_backdrop');
@@ -1174,6 +1175,13 @@ async function feedback_button() {
     container.style.width = board.width + 'px';
     backdrop.style.width = pgn_paste.style.width;
     backdrop.style.height = pgn_paste.style.height;
+
+    new ResizeObserver(() => {
+        var w = user_text.offsetWidth + 'px';
+        container.style.width = w;
+        pgn_paste.style.width = w;
+        backdrop.style.width = w;
+    }).observe(user_text);
 
     // Match exact styling to prevent scroll height differences
     var computedStyle = window.getComputedStyle(pgn_paste);
@@ -1234,7 +1242,6 @@ async function feedback_button() {
     clear.addEventListener('click', make_clear_handler(pgn_paste));
     rotate.addEventListener('click', rotate_board);
     learn.addEventListener('click', make_learn_handler(pgn_paste));
-    feedback.addEventListener('click', feedback_button);
     upload.addEventListener('submit', upload_pgn);
     document.getElementById('lichess-fetch').addEventListener('click', fetch_lichess_games);
 

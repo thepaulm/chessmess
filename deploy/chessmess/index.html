@@ -3,12 +3,37 @@
 		<meta charset="utf-8">
 		<title>PGN Train - Train On Your PGNs</title>
 		<style type="text/css">
+			body {
+				font-family: sans-serif;
+				background-color: #f0f0f0;
+				margin: 24px;
+				color: #222;
+			}
+			h1 {
+				margin: 0 0 16px 0;
+				font-size: 22px;
+				color: #1a1a1a;
+			}
 			.no-bullets, .no-bullets li {
-				list-style-type:none;
+				list-style-type: none;
 				align: left;
 			}
-			table, th, td {
-				border: 1px solid black;
+			table {
+				border-collapse: collapse;
+				background: white;
+				border-radius: 8px;
+				box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+				overflow: hidden;
+			}
+			td {
+				border: 1px solid #ddd;
+				padding: 12px 16px;
+				vertical-align: top;
+			}
+			.col-header {
+				font-size: 15px;
+				font-weight: 600;
+				margin: 0 0 10px 0;
 			}
 			.scrollable-container {
 				overflow-y: auto;
@@ -61,16 +86,55 @@
 				resize: none;
 				z-index: 2;
 			}
+			#user_text {
+				box-sizing: border-box;
+				background-color: #f0f0f0;
+				color: #444;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				font-size: 13px;
+				resize: horizontal;
+			}
+			.lichess-inputs input {
+				display: block;
+				margin-bottom: 6px;
+				padding: 5px 7px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				font-size: 13px;
+			}
+			.lichess-inputs .count-row {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				margin-bottom: 6px;
+			}
+			.lichess-inputs .count-row input {
+				width: 50px;
+				margin-bottom: 0;
+			}
+			.btn {
+				padding: 8px 22px;
+				font-size: 14px;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+				background-color: #3d5a3e;
+				color: white;
+				transition: background-color 0.15s;
+			}
+			.btn:hover {
+				background-color: #2e452f;
+			}
 		</style>
 	</head>
     <body>
+		<h1>PGN Train</h1>
 		<table>
-			<tr>
-			</tr>
 			<tr>
 				<td><img src="board.png" id="board"></td>
 				<td>
-					<b>Stored PGNs</b>
+					<div class="col-header">Stored PGNs</div>
 					<div id="login-container">
 						<!-- Login button will be replaced with user's name after login -->
 						<div id="g_id_onload"
@@ -100,15 +164,15 @@
 					</div>
 				</td>
 				<td>
-					<b>Lichess Games</b>
-					<br>
-					<input type="text" id="lichess-username" placeholder="Lichess username" style="width:160px">
-					<br>
-					<input type="password" id="lichess-token" placeholder="API token (optional)" style="width:160px">
-					<br>
-					<input type="number" id="lichess-count" value="10" min="1" max="200" style="width:50px"> games
-					<button id="lichess-fetch">Fetch</button>
-					<br>
+					<div class="col-header">Lichess Games</div>
+					<div class="lichess-inputs">
+						<input type="text" id="lichess-username" placeholder="Lichess username" style="width:160px">
+						<input type="password" id="lichess-token" placeholder="API token (optional)" style="width:160px">
+						<div class="count-row">
+							<input type="number" id="lichess-count" value="10" min="1" max="200" style="width:50px"> games
+							<button id="lichess-fetch">Fetch</button>
+						</div>
+					</div>
 					<span id="lichess-status" style="font-size:small"></span>
 					<div class="scrollable-container">
 						<ul class="no-bullets" id="lichess-game-list"></ul>
@@ -117,20 +181,16 @@
 			</tr>
 		</table>
 		<br>
-		<b>News: You can now log in and store your pgns.</b> <a href="faq.html">FAQ</a>
-		<br>
 		<div class="textarea-container">
 			<div id="pgn_paste_backdrop" class="highlight-backdrop"></div>
 			<textarea id="pgn_paste"></textarea>
 		</div>
 		<br>
 		<textarea id="user_text"></textarea>
-		<br>
-		<button id="clear" style="width:200px;height:100">Clear</button>
-		<button id="rotate" style="width:200px;height:100">Rotate</button>
-		<button id="learn" style="width:200px;height:100">Learn</button>
-		<br>
-		<button id="feedback" style="height:50px">Send Feedback</button>
+		<br><br>
+		<button id="clear" class="btn">Clear</button>
+		<button id="rotate" class="btn">Rotate</button>
+		<button id="learn" class="btn">Learn</button>
 
 
 		<script src="https://accounts.google.com/gsi/client" async defer></script>
