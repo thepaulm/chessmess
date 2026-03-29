@@ -1,3 +1,14 @@
+window.addEventListener('load', function() {
+    google.accounts.id.initialize({
+        client_id: '1088260192283-c62v3ctm2lj1jjtlml2pkmuvl0hpjron.apps.googleusercontent.com',
+        callback: handleCredentialResponse
+    });
+    google.accounts.id.renderButton(
+        document.querySelector('.g_id_signin'),
+        { type: 'standard' }
+    );
+});
+
 function handleCredentialResponse(response) {
 
     // Send the ID token to your backend server for verification
