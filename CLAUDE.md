@@ -25,6 +25,8 @@ python deploy/chessmess/http_server.py
 
 Then serve the static files (e.g. `python -m http.server` from `deploy/chessmess/`).
 
+In production, nginx proxies the backend endpoints (`/upload-pgn`, `/user-pgn`, `/user-pgn-list`, `/delete-pgn`, `/verify-token`) to port 8000. These `location` blocks must be in the **HTTPS (443) server block** — the HTTP (80) block typically just redirects and proxy rules there are never reached.
+
 For offline/airplane testing, open `fakeuser.html` instead of `index.html` — it bypasses Google OAuth using the hardcoded `TESTUSER` token that the backend accepts.
 
 ## Key Files
@@ -34,11 +36,11 @@ For offline/airplane testing, open `fakeuser.html` instead of `index.html` — i
 | `mainchess.js` | Board rendering, drag-and-drop, move validation, learn mode quiz logic |
 | `move_tree.js` | Game tree data structure (`Move`, `MoveOptionNode`); random path selection |
 | `effects.js` | Audio playback and visual animations (success/fail markers) |
-| `pgn_storage.js` | PGN upload/download UI; stored PGN list; PGN cache; best-match and diff logic |
+| `pgn_storage.js` | PGN upload/download/delete UI; stored PGN list (sorted alphabetically); PGN cache; best-match and diff logic |
 | `lichess.js` | Lichess game fetcher — calls the Lichess API directly from the browser, parses returned PGN, renders game list |
 | `auth.js` | Google OAuth sign-in flow |
 | `common.js` | Low-level string/character utilities (chess coordinate helpers) |
-| `backend.py` | HTTP server: token verification, PGN upload/download, user directories |
+| `backend.py` | HTTP server: token verification, PGN upload/download/delete, user directories |
 | `http_server.py` | Separate feedback collection server (port 8245) |
 
 ## Tech Stack
@@ -46,7 +48,7 @@ For offline/airplane testing, open `fakeuser.html` instead of `index.html` — i
 - **Frontend**: Vanilla JS (ES6+), HTML5, no framework, no build tools
 - **Backend**: Python 3 `BaseHTTPRequestHandler`; `google-auth` for OAuth verification
 - **Auth**: Google OAuth 2.0 (Client ID hardcoded in both `auth.js` and `backend.py`)
-- **Storage**: PGN files stored per-user in a server-side directory; filenames are hex-encoded for filesystem safety
+- **Storage**: PGN files stored per-user in a server-side directory; filenames are hex-encoded for filesystem safety. The listing is returned sorted case-insensitively by the decoded filename.
 - **Lichess**: Games are fetched client-side via `https://lichess.org/api/games/user/{username}` (Lichess allows CORS). No backend involvement. A personal API token is optional (needed only for private games). The response is raw PGN, split on blank lines before `[Event` tags.
 
 ## Audio
