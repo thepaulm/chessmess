@@ -67,7 +67,7 @@ def decode_hex_filename(filename):
 
 def get_pgn_listing(user_id):
     dirname = user_dir_name(user_id)
-    return [decode_hex_filename(f) for f in os.listdir(dirname) if os.path.isfile(os.path.join(dirname, f))]
+    return sorted([decode_hex_filename(f) for f in os.listdir(dirname) if os.path.isfile(os.path.join(dirname, f))], key=str.casefold)
 
 def filesystem_name(name):
     return name.encode('utf-8').hex()
