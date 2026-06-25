@@ -49,7 +49,9 @@ For offline/airplane testing, open `fakeuser.html` instead of `index.html` — i
 
 ## Audio
 
-Audio files (`MovePiece.mp3`, two `.wav` files) live in `deploy/chessmess/`. They are loaded once at startup with `preload = 'auto'` and replayed by resetting `currentTime = 0` before each `.play()` call. The move sound uses the Web Audio API with a randomised `playbackRate` (0.85–1.15×) for pitch variation. Don't remove the reset or the preload — both are needed to avoid playback delay. The move sound also plays on left/right arrow key navigation (only when there is a move to make).
+Audio files (`MovePiece.wav` and the `mixkit-*.wav` files) live in `deploy/chessmess/`. They are loaded once at startup with `preload = 'auto'` and replayed by resetting `currentTime = 0` before each `.play()` call. The move sound uses the Web Audio API with a randomised `playbackRate` (0.85–1.15×) for pitch variation. Don't remove the reset or the preload — both are needed to avoid playback delay. The move sound also plays on left/right arrow key navigation (only when there is a move to make).
+
+For snappiness, the move sound is decoded into a Web Audio buffer (`setup_move_audio`) and played fire-and-forget via `move_audio()` — it starts the sample and returns immediately, so callers must **not** `await` it to sequence game logic (gating moves on the full sample duration makes them feel sluggish). The `AudioContext` is created with `{ latencyHint: 'interactive' }` for lowest output latency. `MovePiece.wav` is a trimmed/leading-silence-removed version of the original `MovePiece.mp3` (the mp3 had ~22ms of dead air before the click, plus MP3 codec priming delay); keep the sample's attack at the very start of the file.
 
 ## PGN Diff Highlighting
 

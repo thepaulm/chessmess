@@ -175,19 +175,18 @@ async function check_learn_move(piece, x, y) {
         piece_to_square(board, piece.image, pfile, prow);
         await Promise.all([a, b]);
     } else {
-        var a = move_audio();
+        move_audio();
         var b = correct_move(piece, bx, by);
         make_move(index); // officially do my move
-        await Promise.all([a, b]);
+        await b;
 
         if (boardspace_at.moves.length == 0) {
             await completed();
             return;
         }
 
-        a = move_audio();
+        move_audio();
         make_move(); // lets do the next one ...
-        await a;
 
         if (boardspace_at.moves.length == 0) {
             await completed();
@@ -1008,9 +1007,8 @@ function make_learn_handler(pgn_paste) {
         boardspace_at = moves.random_start();
 
         if (is_rotate) {
-            var a = move_audio();
+            move_audio();
             make_move();
-            await a;
         }
     }
 }
@@ -1149,9 +1147,9 @@ function load_piece_images() {
 
 function load_audio_styles() {
     load_audio_style("game_over", "mixkit-completion-of-a-level-2063.wav");
-    load_audio_style("move", "MovePiece.mp3");
+    load_audio_style("move", "MovePiece.wav");
     load_audio_style("bad_move", "mixkit-interface-option-select-2573.wav");
-    setup_move_audio("MovePiece.mp3");
+    setup_move_audio("MovePiece.wav");
 }
 
 (function () {

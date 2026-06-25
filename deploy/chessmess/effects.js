@@ -43,28 +43,30 @@ let _moveAudioCtx = null;
 let _moveAudioBuffer = null;
 
 async function setup_move_audio(filename) {
-    _moveAudioCtx = new AudioContext();
+    // 'interactive' requests the lowest available output latency so the click
+    // lands the instant the piece snaps to its square.
+    _moveAudioCtx = new AudioContext({ latencyHint: 'interactive' });
     const response = await fetch(filename);
     const arrayBuffer = await response.arrayBuffer();
     _moveAudioBuffer = await _moveAudioCtx.decodeAudioData(arrayBuffer);
 }
 
-async function move_audio() {
+// Fire-and-forget: starts the sound and returns immediately. Callers must NOT
+// rely on the returned promise to know when the sound has finished playing —
+// gating game logic on the full sample duration makes moves feel sluggish.
+function move_audio() {
     if (!_moveAudioBuffer) {
         var a = audio_styles['move'];
         a.currentTime = 0;
-        await a.play();
+        a.play();
         return;
     }
-    if (_moveAudioCtx.state === 'suspended') await _moveAudioCtx.resume();
+    if (_moveAudioCtx.state === 'suspended') _moveAudioCtx.resume();
     const source = _moveAudioCtx.createBufferSource();
     source.buffer = _moveAudioBuffer;
     source.playbackRate.value = 0.85 + Math.random() * 0.3;  // ±15% pitch variation
     source.connect(_moveAudioCtx.destination);
-    await new Promise(resolve => {
-        source.onended = resolve;
-        source.start(0);
-    });
+    source.start(0);
 }
 
 async function bad_move_audio() {
