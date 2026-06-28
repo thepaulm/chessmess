@@ -11,6 +11,18 @@ let is_learn = false;
 let user_text = null;
 let current_user_color = null;
 
+/* Diff arrow state: when learning a Lichess game, show the move(s) the stored
+   PGN says we should have played at the first divergence. */
+let diff_ply = null;            // ply depth of the position right before the diverging move
+let diff_suggested = [];        // SAN move(s) the stored PGN recommends there
+let diff_arrow_color = 'red';   // 'red' (our move) or 'blue' (opponent move)
+let arrow_svg = null;
+
+/* Move animation: pieces slide to their squares instead of teleporting. */
+const ANIM_MS = 160;
+let anim_enabled = false;   // when true, set_piece_location applies a CSS slide transition
+let nav_animating = false;  // throttles arrow-key navigation to one move per animation
+
 let initial_gs = null;
 
 let piece_images = {};
@@ -33,6 +45,12 @@ function bfile(cpos) {
 }
 
 function set_piece_location(piece, x, y) {
+    /* anim_enabled is set only around programmatic moves (forward make_move and
+       the backward slide in prev_move). Dragging, initial placement and board
+       redraws leave it off so those snap instantly. */
+    piece.style.transition = anim_enabled
+        ? `left ${ANIM_MS}ms ease, top ${ANIM_MS}ms ease`
+        : 'none';
     piece.style.left = `${x}px`;
     piece.style.top = `${y}px`;
 }
@@ -102,6 +120,183 @@ function x2board_file_str(x) {
 
 function y2board_row_str(y) {
     return brow_name(y2board_row(y));
+}
+
+/* ---- Diff arrows: draw the move(s) the stored PGN recommends ---- */
+
+const ARROW_NS = 'http://www.w3.org/2000/svg';
+const ARROW_COLORS = { red: '#9b1c1c', blue: '#1f3a93' };
+
+/* Compare two game-state grids and return the piece motions between them, as
+   {from:{r,f}, to:{r,f}} pairs (from = square the piece occupies in `before`,
+   to = square it occupies in `after`). Pieces are matched by name, so normal
+   moves, captures and castling resolve; promotions/en-passant captures that
+   have no name match are simply left out (snapped, not slid). */
+function diff_moves(before, after) {
+    var gone = [];      // had a piece in `before`, changed in `after`
+    var appeared = [];  // has a piece in `after`, changed from `before`
+    for (var r = 1; r <= squares; r++) {
+        for (var f = 0; f < squares; f++) {
+            var b = before[r][f];
+            var a = after[r][f];
+            if (b === a) continue;
+            if (b != null) gone.push({ r: r, f: f, name: b });
+            if (a != null) appeared.push({ r: r, f: f, name: a });
+        }
+    }
+    var slides = [];
+    var used = new Array(gone.length).fill(false);
+    for (var i = 0; i < appeared.length; i++) {
+        for (var j = 0; j < gone.length; j++) {
+            if (!used[j] && gone[j].name === appeared[i].name) {
+                used[j] = true;
+                slides.push({ from: gone[j], to: appeared[i] });
+                break;
+            }
+        }
+    }
+    return slides;
+}
+
+function node_depth(node) {
+    var d = 0;
+    var at = node;
+    while (at != null && at.prev != null) {
+        d++;
+        at = at.prev;
+    }
+    return d;
+}
+
+/* Screen square center, in board-local coordinates (origin = board top-left),
+   following the same file/row flipping the pieces use when the board is rotated. */
+function square_center_xy(cpos, sw, sh) {
+    var file = bfile(cpos);
+    var row = 8 - brow(cpos);
+    if (is_rotate) {
+        file = 7 - file;
+        row = 7 - row;
+    }
+    return { x: (file + 0.5) * sw, y: (row + 0.5) * sh };
+}
+
+/* Resolve a SAN move against the current board position to from/to squares. */
+function resolve_move_squares(san, color) {
+    var res = piece_for_move({ move: san, color: color });
+    var piece = res[0];
+    var movestr = res[1];
+    if (piece == null) return null;
+    var from = piece.position;
+    var to;
+    if (movestr == 'O-O') {
+        to = 'g' + piece.position[1];
+    } else if (movestr == 'O-O-O') {
+        to = 'c' + piece.position[1];
+    } else {
+        var m = movestr.match(/[a-h][1-8]/);
+        if (m == null) return null;
+        to = m[0];
+    }
+    return { from: from, to: to };
+}
+
+function clear_diff_arrows() {
+    if (arrow_svg != null) {
+        while (arrow_svg.firstChild) arrow_svg.removeChild(arrow_svg.firstChild);
+        arrow_svg.style.display = 'none';
+    }
+}
+
+function draw_diff_arrows(pairs, color) {
+    if (arrow_svg == null) {
+        arrow_svg = document.createElementNS(ARROW_NS, 'svg');
+        arrow_svg.style.position = 'absolute';
+        arrow_svg.style.pointerEvents = 'none';
+        arrow_svg.style.zIndex = 100;
+        document.body.appendChild(arrow_svg);
+    }
+    while (arrow_svg.firstChild) arrow_svg.removeChild(arrow_svg.firstChild);
+
+    var br = board.getBoundingClientRect();
+    var sw = br.width / squares;
+    var sh = br.height / squares;
+
+    arrow_svg.style.left = (br.x + window.scrollX) + 'px';
+    arrow_svg.style.top = (br.y + window.scrollY) + 'px';
+    arrow_svg.style.width = br.width + 'px';
+    arrow_svg.style.height = br.height + 'px';
+    arrow_svg.setAttribute('viewBox', '0 0 ' + br.width + ' ' + br.height);
+    arrow_svg.style.display = 'block';
+
+    var hex = ARROW_COLORS[color] || ARROW_COLORS.red;
+    var width = sw * 0.16;
+
+    for (var i = 0; i < pairs.length; i++) {
+        var a = square_center_xy(pairs[i].from, sw, sh);
+        var b = square_center_xy(pairs[i].to, sw, sh);
+        var dx = b.x - a.x;
+        var dy = b.y - a.y;
+        var len = Math.sqrt(dx * dx + dy * dy);
+        if (len === 0) continue;
+        var ux = dx / len;
+        var uy = dy / len;
+
+        var head = sw * 0.42;          // length of the arrow head
+        var tailGap = sw * 0.28;       // pull the tail out of the source square center
+        var x1 = a.x + ux * tailGap;
+        var y1 = a.y + uy * tailGap;
+        var x2 = b.x - ux * head;      // shaft stops where the head begins
+        var y2 = b.y - uy * head;
+
+        var line = document.createElementNS(ARROW_NS, 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', hex);
+        line.setAttribute('stroke-width', width);
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('opacity', '0.8');
+        arrow_svg.appendChild(line);
+
+        /* Triangular head pointing at the destination square center. */
+        var hw = sw * 0.30;            // half-width of the head base
+        var bx = b.x - ux * head;
+        var by = b.y - uy * head;
+        var px = -uy;                  // perpendicular unit vector
+        var py = ux;
+        var tri = document.createElementNS(ARROW_NS, 'polygon');
+        var points = [
+            b.x + ',' + b.y,
+            (bx + px * hw) + ',' + (by + py * hw),
+            (bx - px * hw) + ',' + (by - py * hw)
+        ].join(' ');
+        tri.setAttribute('points', points);
+        tri.setAttribute('fill', hex);
+        tri.setAttribute('opacity', '0.8');
+        arrow_svg.appendChild(tri);
+    }
+}
+
+/* Show the recommended-move arrow(s) only when the board is sitting at the
+   position right before the first diverging move; clear it otherwise. */
+function update_diff_arrows() {
+    if (!is_learn || diff_ply == null || diff_suggested.length === 0 ||
+        boardspace_at == null || node_depth(boardspace_at) !== diff_ply) {
+        clear_diff_arrows();
+        return;
+    }
+    var color = (diff_ply % 2 === 0) ? 'white' : 'black';
+    var pairs = [];
+    for (var i = 0; i < diff_suggested.length; i++) {
+        var sq = resolve_move_squares(diff_suggested[i], color);
+        if (sq != null) pairs.push(sq);
+    }
+    if (pairs.length === 0) {
+        clear_diff_arrows();
+        return;
+    }
+    draw_diff_arrows(pairs, diff_arrow_color);
 }
 
 async function incorrect_move(piece, x, y) {
@@ -340,6 +535,9 @@ async function set_board_state(gs) {
 }
 
 async function reset_game_tree(pgn_paste, user_color = null) {
+    diff_ply = null;
+    diff_suggested = [];
+    clear_diff_arrows();
     await reload_board();
     moves = parse_move_tree(pgn_paste.value);
     moves.set_initial_gs(initial_gs);
@@ -391,6 +589,7 @@ async function rotate_board(event) {
         is_rotate = true;
     }
     redraw_board();
+    update_diff_arrows();
 }
 
 function is_loc(m) {
@@ -932,8 +1131,27 @@ async function prev_move() {
         console.log("No prev moves.");
         return;
     }
+
+    /* Slide the moved piece(s) back to their previous squares, then let
+       set_board_state snap everything to the authoritative position (which
+       also restores any captured pieces). The snap is invisible because the
+       slid pieces already finished at the squares set_board_state recreates. */
+    var slides = diff_moves(boardspace_at.gs, at.gs);
+    if (slides.length > 0) {
+        anim_enabled = true;
+        for (var s = 0; s < slides.length; s++) {
+            var mover = boardspace[slides[s].from.r][slides[s].from.f];
+            if (mover != null) {
+                set_piece_image(board, mover.image, make_position(slides[s].to.r, slides[s].to.f));
+            }
+        }
+        anim_enabled = false;
+        await new Promise(function (res) { setTimeout(res, ANIM_MS); });
+    }
+
     await set_board_state(at.gs);
     boardspace_at = at;
+    update_diff_arrows();
 
     // Highlight the move that led to this position (stored in at.prev.moves)
     if (at.prev != null) {
@@ -966,22 +1184,32 @@ function make_move(index = null) {
     }
     var move = boardspace_at.moves[index];
     var gs = copy_gamespace(boardspace_at.gs);
-    run_move(move, gs);
+    anim_enabled = true;
+    run_move(move, gs);   // slides the piece(s) from their current squares to the target
+    anim_enabled = false;
     boardspace_at = move.next;
     window.highlightPgnCharacters(move.move_start, move.move_end);
     boardspace_at.set_gs(gs);
+    update_diff_arrows();
 }
 
 async function key_press(k) {
+    /* Ignore new navigation while a slide is still playing, so transitions
+       aren't cut off mid-flight. */
+    if (nav_animating) return;
     if (k.key == "ArrowRight") {
         if (boardspace_at != null && boardspace_at.moves.length > 0) {
+            nav_animating = true;
             make_move();
             move_audio();
+            setTimeout(function () { nav_animating = false; }, ANIM_MS);
         }
     } else if (k.key == "ArrowLeft") {
         if (boardspace_at != null && boardspace_at.prev != null) {
+            nav_animating = true;
             await prev_move();
             move_audio();
+            nav_animating = false;
         }
     }
 }
@@ -1001,6 +1229,12 @@ function make_learn_handler(pgn_paste) {
         window.setPgnDiffRanges(result.diff_ranges);
         window.highlightPgnCharacters(0, 0);
 
+        /* Set up the recommended-move arrow for the first divergence. */
+        diff_suggested = result.suggested_moves || [];
+        diff_ply = (diff_suggested.length > 0 && typeof result.diff_ply === 'number')
+            ? result.diff_ply : null;
+        diff_arrow_color = (result.diff_ranges[0] && result.diff_ranges[0].color) || 'red';
+
         moves.linearize();
 
         /* Randomize start */
@@ -1010,6 +1244,7 @@ function make_learn_handler(pgn_paste) {
             move_audio();
             make_move();
         }
+        update_diff_arrows();
     }
 }
 

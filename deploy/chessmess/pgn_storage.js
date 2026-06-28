@@ -237,12 +237,31 @@ async function find_best_pgn_match(pgn_text, user_color = null) {
         }
     }
 
-    if (!best_name) return { name: null, diff_ranges: [] };
+    if (!best_name) return { name: null, diff_ranges: [], suggested_moves: [] };
 
-    if (best_count >= current_moves.length) return { name: best_name, diff_ranges: [] };
+    if (best_count >= current_moves.length) return { name: best_name, diff_ranges: [], suggested_moves: [] };
 
     const first_diff = current_moves[best_count];
     const is_my_move = user_color === null || first_diff.color === user_color;
     const diff_ranges = [{ start: first_diff.start, end: first_diff.end, color: is_my_move ? 'red' : 'blue' }];
-    return { name: best_name, diff_ranges };
+
+    /* Collect the move(s) the stored PGN says we should have played at the
+       divergence point. Walk the best-matching tree down the moves we matched,
+       then read off every option at that node (there can be several variations). */
+    let suggested_moves = [];
+    try {
+        const mt = parse_move_tree(pgn_cache[best_name]);
+        let at = mt.top;
+        let ok = true;
+        for (let i = 0; i < best_count; i++) {
+            const match = at.moves.find(opt => opt.move === current_moves[i].move);
+            if (!match) { ok = false; break; }
+            at = match.next;
+        }
+        if (ok) suggested_moves = at.moves.map(opt => opt.move);
+    } catch (e) {
+        suggested_moves = [];
+    }
+
+    return { name: best_name, diff_ranges, suggested_moves, diff_ply: best_count };
 }

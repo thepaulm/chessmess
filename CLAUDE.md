@@ -63,6 +63,8 @@ When Learn is clicked on a Lichess game, `pgn_storage.js` compares the game agai
 
 The user's color is determined from the Lichess PGN headers (`[White]`/`[Black]`) and stored in `current_user_color` in `mainchess.js`. It is also used to orient the board correctly (black-at-bottom when user played black).
 
+Alongside the textarea highlight, `find_best_pgn_match` also returns `suggested_moves` (the SAN move(s) the stored PGN recommends at the divergence node — there can be several when the book has variations) and `diff_ply` (the ply depth of the position just before the diverging move). `mainchess.js` draws these as on-board arrows: an SVG overlay (`arrow_svg`, appended to `<body>`, positioned over `#board`) shows the recommended move(s) only while the board is sitting at that exact position (`node_depth(boardspace_at) === diff_ply`), via `update_diff_arrows()` called from `make_move`/`prev_move`/`rotate_board`/learn setup. Arrows are red when the missed move was the user's, blue when it was the opponent's, matching the textarea colors. SAN is resolved to from/to squares with `resolve_move_squares()` (reuses `piece_for_move` against the live board), and square centers follow the same rotation flipping the pieces use.
+
 ## PGN Textarea Highlight System
 
 The textarea uses a transparent-overlay backdrop (`#pgn_paste_backdrop`) that sits behind the `<textarea>`. `window.highlightPgnCharacters(start, end)` rebuilds the backdrop HTML on every call, applying CSS classes:
