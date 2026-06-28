@@ -1055,6 +1055,20 @@ function find_attack_pawn(move) {
     return piece;
 }
 
+/* Return the promoted piece's name (color-cased) for a SAN move like "e8=Q"
+   or "exd8=Q+", or null if the move isn't a promotion. */
+function promo_piece(san, color) {
+    var eq = san.indexOf('=');
+    if (eq === -1 || eq + 1 >= san.length) {
+        return null;
+    }
+    var letter = upper(san[eq + 1]);
+    if (letter !== 'Q' && letter !== 'R' && letter !== 'B' && letter !== 'N') {
+        return null;
+    }
+    return color === 'white' ? letter : lower(letter);
+}
+
 function piece_for_move(move) {
     var take = false;
     var piece = null;
@@ -1108,6 +1122,15 @@ function piece_for_move(move) {
         movestr = move.move;
         piece = king_at_start(move.color);
     }
+    /* Drop any promotion suffix ("e8=Q" -> "e8") so the target square and the
+       piece's stored position stay clean; the promotion itself is applied in
+       run_move via promo_piece. */
+    if (movestr != null) {
+        var eq = movestr.indexOf('=');
+        if (eq !== -1) {
+            movestr = movestr.substr(0, eq);
+        }
+    }
     return [piece, movestr, take];
 }
 
@@ -1120,9 +1143,28 @@ function run_move(move, gs) {
     [piece, movestr, take] = piece_for_move(move);
     if (piece != null) {
         move_piece(piece, movestr, take, gs);
+        var promo = promo_piece(move.move, move.color);
+        if (promo != null) {
+            promote_piece(piece, promo, gs);
+        }
     } else {
         console.log("CANT RUN: " + move.move);
     }
+}
+
+/* Morph a pawn that just reached the back rank into its promoted piece.
+   move_piece has already slid the pawn to its target square; we reuse the
+   same DOM image (just swap its source) so the slide animation is preserved,
+   then update the logical name/type and the gamespace. */
+function promote_piece(piece, promo_name, gs) {
+    var prow = brow(piece.position);
+    var pfile = bfile(piece.position);
+    piece.name = promo_name;
+    piece.type = upper(promo_name);
+    if (piece_images[promo_name] != null) {
+        piece.image.src = piece_images[promo_name].src;
+    }
+    gs[prow][pfile] = promo_name;
 }
 
 async function prev_move() {
