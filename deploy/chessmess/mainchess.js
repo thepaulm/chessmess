@@ -1426,7 +1426,15 @@ function load_audio_styles() {
     load_audio_style("game_over", "mixkit-completion-of-a-level-2063.wav");
     load_audio_style("move", "MovePiece.wav");
     load_audio_style("bad_move", "mixkit-interface-option-select-2573.wav");
-    setup_move_audio("MovePiece.wav");
+    setup_move_audio("MovePiece.wav").then(function () {
+        // Temporary A/B/C audition: randomly play one of the candidate move
+        // sounds per move (logged to the console) so they can be compared.
+        setup_move_audio_candidates([
+            { label: 'A', filename: 'MovePiece_A.wav' },
+            { label: 'B', filename: 'MovePiece_B.wav' },
+            { label: 'C', filename: 'MovePiece_C.wav' },
+        ]);
+    });
 }
 
 (function () {

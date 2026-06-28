@@ -41,6 +41,10 @@ async function game_over_audio() {
 
 let _moveAudioCtx = null;
 let _moveAudioBuffer = null;
+// A/B/C audition: each entry is {label, buffer}. When populated, move_audio
+// picks one at random per move (and logs the label) so candidates can be
+// compared in context. Leave empty to use the single _moveAudioBuffer.
+let _moveAudioCandidates = [];
 
 async function setup_move_audio(filename) {
     // 'interactive' requests the lowest available output latency so the click
@@ -49,6 +53,18 @@ async function setup_move_audio(filename) {
     const response = await fetch(filename);
     const arrayBuffer = await response.arrayBuffer();
     _moveAudioBuffer = await _moveAudioCtx.decodeAudioData(arrayBuffer);
+}
+
+// Load several candidate move sounds for random A/B/C auditioning. Each item is
+// {label, filename}. Requires setup_move_audio to have created the context.
+async function setup_move_audio_candidates(items) {
+    _moveAudioCandidates = [];
+    for (const item of items) {
+        const response = await fetch(item.filename);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = await _moveAudioCtx.decodeAudioData(arrayBuffer);
+        _moveAudioCandidates.push({ label: item.label, buffer: buffer });
+    }
 }
 
 // Fire-and-forget: starts the sound and returns immediately. Callers must NOT
@@ -62,8 +78,14 @@ function move_audio() {
         return;
     }
     if (_moveAudioCtx.state === 'suspended') _moveAudioCtx.resume();
+    let buffer = _moveAudioBuffer;
+    if (_moveAudioCandidates.length > 0) {
+        const pick = _moveAudioCandidates[Math.floor(Math.random() * _moveAudioCandidates.length)];
+        buffer = pick.buffer;
+        console.log("move sound: " + pick.label);
+    }
     const source = _moveAudioCtx.createBufferSource();
-    source.buffer = _moveAudioBuffer;
+    source.buffer = buffer;
     source.playbackRate.value = 0.85 + Math.random() * 0.3;  // ±15% pitch variation
     source.connect(_moveAudioCtx.destination);
     source.start(0);
