@@ -41,9 +41,9 @@ async function game_over_audio() {
 
 let _moveAudioCtx = null;
 let _moveAudioBuffer = null;
-// A/B/C audition: each entry is {label, buffer}. When populated, move_audio
-// picks one at random per move (and logs the label) so candidates can be
-// compared in context. Leave empty to use the single _moveAudioBuffer.
+// Move-sound variants: each entry is {label, buffer}. When populated,
+// move_audio picks one at random per move for variety. Leave empty to use the
+// single _moveAudioBuffer.
 let _moveAudioCandidates = [];
 
 async function setup_move_audio(filename) {
@@ -55,7 +55,7 @@ async function setup_move_audio(filename) {
     _moveAudioBuffer = await _moveAudioCtx.decodeAudioData(arrayBuffer);
 }
 
-// Load several candidate move sounds for random A/B/C auditioning. Each item is
+// Load several move-sound variants to play at random for variety. Each item is
 // {label, filename}. Requires setup_move_audio to have created the context.
 async function setup_move_audio_candidates(items) {
     _moveAudioCandidates = [];
@@ -82,7 +82,6 @@ function move_audio() {
     if (_moveAudioCandidates.length > 0) {
         const pick = _moveAudioCandidates[Math.floor(Math.random() * _moveAudioCandidates.length)];
         buffer = pick.buffer;
-        console.log("move sound: " + pick.label);
     }
     const source = _moveAudioCtx.createBufferSource();
     source.buffer = buffer;

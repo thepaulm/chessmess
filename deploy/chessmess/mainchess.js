@@ -1427,8 +1427,7 @@ function load_audio_styles() {
     load_audio_style("move", "MovePiece.wav");
     load_audio_style("bad_move", "mixkit-interface-option-select-2573.wav");
     setup_move_audio("MovePiece.wav").then(function () {
-        // Temporary A/B/C audition: randomly play one of the candidate move
-        // sounds per move (logged to the console) so they can be compared.
+        // Randomly play one of three move-sound variants per move for variety.
         setup_move_audio_candidates([
             { label: 'A', filename: 'MovePiece_A.wav' },
             { label: 'B', filename: 'MovePiece_B.wav' },
